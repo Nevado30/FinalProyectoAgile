@@ -1,0 +1,54 @@
+# Entornos virtuales
+venv/
+.env/
+.venv/
+ENV/
+
+# Archivos de cache de Python
+_pycache_/
+*.py[cod]
+*$py.class
+
+# Archivos de configuración locales
+*.env
+*.ini
+*.toml
+*.cfg
+
+# Archivos de log
+*.log
+
+# Archivos de base de datos locales (ejemplo: sqlite)
+*.sqlite3
+*.db
+
+# Archivos de test/coverage
+.coverage
+.tox/
+.nox/
+.pytest_cache/
+
+# Archivos de herramientas de análisis/formatos
+.mypy_cache/
+.pytype/
+.pyre/
+ruff_cache/
+
+# Directorios de compilación/paquetes
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Archivos de Jupyter Notebook
+.ipynb_checkpoints/
+
+# Archivos de IDEs/editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Archivos temporales del sistema operativo
+.DS_Store
+Thumbs.db
