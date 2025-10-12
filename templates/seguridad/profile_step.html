@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Datos del interesado{% endblock %}
+
+{% block header %}
+  <h1>Registro de datos</h1>
+  <p>Correo verificado: <strong>{{ email }}</strong></p>
+{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <form method="post">
+      {% csrf_token %}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label>Nombres</label>
+          <input name="nombres" value="{{ persona.nombres|default:'' }}" required style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);">
+        </div>
+        <div>
+          <label>Apellidos</label>
+          <input name="apellidos" value="{{ persona.apellidos|default:'' }}" required style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);">
+        </div>
+        <div>
+          <label>Teléfono</label>
+          <input name="telefono" value="{{ persona.telefono|default:'' }}" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);">
+        </div>
+        <div>
+          <label>Dirección</label>
+          <input name="direccion" value="{{ persona.direccion|default:'' }}" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);">
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="btn btn-primary" type="submit">Continuar</button>
+      </div>
+    </form>
+  </div>
+{% endblock %}

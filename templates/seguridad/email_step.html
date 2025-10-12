@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Verificación de correo{% endblock %}
+
+{% block header %}<h1>Verificación del correo electrónico</h1>{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <form method="post">
+      {% csrf_token %}
+      <label>Correo electrónico</label>
+      <input type="email" name="email" required placeholder="tucorreo@dominio.com" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);margin:8px 0;">
+      <button class="btn btn-primary" type="submit">Enviar código</button>
+    </form>
+  </div>
+{% endblock %}
