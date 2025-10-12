@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Reportes – Dashboard</title>
+  <style>
+    .cards { display:flex; gap:16px; margin: 12px 0; }
+    .card { border:1px solid #ddd; padding:12px; border-radius:8px; min-width:200px; }
+    table { width:100%; border-collapse: collapse; margin-top:12px; }
+    th, td { border:1px solid #ddd; padding:8px; text-align:left; }
+    th { background:#f7f7f7; }
+    .filters { display:flex; gap:12px; align-items:center; margin: 12px 0; }
+    .badge { padding:2px 8px; border-radius:12px; font-size:12px; border:1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h1>Dashboard de Reportes</h1>
+  <p>Mes actual: {{ primer_dia }} a {{ ultimo_dia }}</p>
+
+  <div class="cards">
+    <div class="card">
+      <strong>Pendientes (global):</strong>
+      <div style="font-size:24px;">{{ total_pendientes }}</div>
+    </div>
+    <div class="card">
+      <strong>Vencidos (global):</strong>
+      <div style="font-size:24px;">{{ total_vencidos }}</div>
+    </div>
+    <div class="card">
+      <strong>Pagados en el mes:</strong>
+      <div style="font-size:24px;">{{ total_pagados_mes }}</div>
+    </div>
+  </div>
+
+  <form method="get" class="filters">
+    <label>
+      Persona:
+      <select name="persona" onchange="this.form.submit()">
+        <option value="">(Todas)</option>
+        {% for per in personas %}
+          <option value="{{ per.id_persona }}" {% if persona_id == per.id_persona %}selected{% endif %}>
+            {{ per.apellidos }}, {{ per.nombres }}
+          </option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label>
+      Préstamo:
+      <select name="prestamo" onchange="this.form.submit()">
+        <option value="">(Todos)</option>
+        {% for pr in prestamos %}
+          <option value="{{ pr.id_prestamo }}" {% if prestamo_id == pr.id_prestamo %}selected{% endif %}>
+            {{ pr.persona.apellidos }}, {{ pr.persona.nombres }} – {{ pr.banco }}
+          </option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <noscript><button type="submit">Filtrar</button></noscript>
+  </form>
+
+  <h2>Pagos del mes (por fecha de vencimiento)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Persona</th>
+        <th>Banco</th>
+        <th>Cuota</th>
+        <th>Vence</th>
+        <th>Monto</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for pg in pagos_mes %}
+        <tr>
+          <td>{{ pg.prestamo.persona.apellidos }}, {{ pg.prestamo.persona.nombres }}</td>
+          <td>{{ pg.prestamo.banco }}</td>
+          <td>{{ pg.numero_cuota }}</td>
+          <td>{{ pg.fecha_vencimiento }}</td>
+          <td>{{ pg.monto }}</td>
+          <td>
+            <span class="badge">{{ pg.estado }}</span>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6">No hay pagos para el mes con los filtros aplicados.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
