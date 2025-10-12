@@ -1,20 +1,35 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Personas</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% block title %}Personas{% endblock %}
+{% block header %}
   <h1>Personas registradas</h1>
-  <ul>
-    {% for p in personas %}
-      <li>
-        {{ p.apellidos }}, {{ p.nombres }} — {{ p.correo }}
-        · <a href="{% url 'persona:prestamos' p.id_persona %}">Ver préstamos</a>
-      </li>
-    {% empty %}
-      <li>No hay personas registradas.</li>
-    {% endfor %}
-  </ul>
-</body>
-</html>
+{% endblock %}
+{% block content %}
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Persona</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for p in personas %}
+          <tr>
+            <td>{{ p.apellidos }}, {{ p.nombres }}</td>
+            <td>{{ p.correo }}</td>
+            <td>{{ p.telefono|default:"—" }}</td>
+            <td>
+              <a class="btn btn-ghost" href="{% url 'persona:prestamos' p.id_persona %}">Ver préstamos →</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4">No hay personas registradas.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}Gestor de Pagos{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="{% static 'img/logo.svg' %}">
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+  <header class="navbar">
+    <div class="nav-left">
+      <a class="brand" href="/"> Gestor</a>
+    </div>
+    <nav class="nav-right">
+      <a class="nav-link {% if request.path|slice:':10' == '/reportes/' %}active{% endif %}" href="/reportes/">Reportes</a>
+      <a class="nav-link {% if request.path|slice:':10' == '/personas/' %}active{% endif %}" href="/personas/">Personas</a>
+      <a class="nav-link {% if request.path|slice:':11' == '/prestamos/' %}active{% endif %}" href="/prestamos/">Préstamos</a>
+      <a class="nav-link {% if request.path|slice:':7' == '/pagos/' %}active{% endif %}" href="/pagos/">Pagos</a>
+      <a class="btn btn-primary" href="/pagos/pendientes/">Ver pendientes</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    {% block header %}
+      <!-- título de página opcional -->
+    {% endblock %}
+
+    {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+          <div class="msg {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <small>© {{ now|date:"Y" }} Gestor de Pagos — Hecho por nevado</small>
+  </footer>
+</body>
+</html>

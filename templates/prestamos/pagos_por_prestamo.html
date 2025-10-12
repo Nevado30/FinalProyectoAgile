@@ -1,21 +1,43 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Pagos de {{ prestamo.banco }}</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% block title %}Pagos — {{ prestamo.banco }}{% endblock %}
+{% block header %}
   <h1>Pagos del préstamo en {{ prestamo.banco }}</h1>
-  <p>De: {{ prestamo.persona.nombres }} {{ prestamo.persona.apellidos }}</p>
-  <a href="{% url 'prestamos:lista' %}">← Volver a préstamos</a>
-  <ul>
-    {% for pg in pagos %}
-      <li>
-        Cuota {{ pg.numero_cuota }} — Vence: {{ pg.fecha_vencimiento }} — Monto: {{ pg.monto }} — Estado: {{ pg.estado }}
-      </li>
-    {% empty %}
-      <li>Este préstamo aún no tiene pagos registrados.</li>
-    {% endfor %}
-  </ul>
-</body>
-</html>
+  <p>De: {{ prestamo.persona.apellidos }}, {{ prestamo.persona.nombres }}</p>
+  <a class="btn" href="{% url 'prestamos:lista' %}">← Volver a préstamos</a>
+{% endblock %}
+{% block content %}
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Vencimiento</th>
+            <th>Monto</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for pg in pagos %}
+          <tr>
+            <td>{{ pg.numero_cuota }}</td>
+            <td>{{ pg.fecha_vencimiento }}</td>
+            <td>{{ pg.monto }}</td>
+            <td>
+              {% if pg.estado == 'Pendiente' %}
+                <span class="badge badge-pendiente">Pendiente</span>
+              {% elif pg.estado == 'Vencido' %}
+                <span class="badge badge-vencido">Vencido</span>
+              {% else %}
+                <span class="badge badge-pagado">Pagado</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4">No hay pagos.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
