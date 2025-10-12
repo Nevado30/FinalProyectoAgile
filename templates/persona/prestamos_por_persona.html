@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Préstamos de {{ persona.nombres }}</title>
+</head>
+<body>
+  <h1>Préstamos de {{ persona.nombres }} {{ persona.apellidos }}</h1>
+  <a href="{% url 'persona:lista' %}">← Volver a personas</a>
+  <ul>
+    {% for pr in prestamos %}
+      <li>
+        {{ pr.banco }} — Monto total: {{ pr.monto_total }} — Inicio: {{ pr.fecha_inicio }}
+        · <a href="{% url 'prestamos:pagos' pr.id_prestamo %}">Ver pagos</a>
+      </li>
+    {% empty %}
+      <li>Esta persona no tiene préstamos registrados.</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>

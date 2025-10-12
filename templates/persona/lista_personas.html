@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Personas</title>
+</head>
+<body>
+  <h1>Personas registradas</h1>
+  <ul>
+    {% for p in personas %}
+      <li>
+        {{ p.apellidos }}, {{ p.nombres }} — {{ p.correo }}
+        · <a href="{% url 'persona:prestamos' p.id_persona %}">Ver préstamos</a>
+      </li>
+    {% empty %}
+      <li>No hay personas registradas.</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>

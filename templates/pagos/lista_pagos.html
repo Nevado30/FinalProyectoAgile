@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Pagos</title>
+</head>
+<body>
+  <h1>Pagos (todas las cuotas)</h1>
+  <ul>
+    {% for pg in pagos %}
+      <li>
+        {{ pg.prestamo.persona.apellidos }}, {{ pg.prestamo.persona.nombres }}
+        — {{ pg.prestamo.banco }}
+        — Cuota {{ pg.numero_cuota }}
+        — Vence: {{ pg.fecha_vencimiento }}
+        — Monto: {{ pg.monto }}
+        — Estado: {{ pg.estado }}
+      </li>
+    {% empty %}
+      <li>No hay pagos registrados.</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>

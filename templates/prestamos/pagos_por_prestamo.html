@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Pagos de {{ prestamo.banco }}</title>
+</head>
+<body>
+  <h1>Pagos del préstamo en {{ prestamo.banco }}</h1>
+  <p>De: {{ prestamo.persona.nombres }} {{ prestamo.persona.apellidos }}</p>
+  <a href="{% url 'prestamos:lista' %}">← Volver a préstamos</a>
+  <ul>
+    {% for pg in pagos %}
+      <li>
+        Cuota {{ pg.numero_cuota }} — Vence: {{ pg.fecha_vencimiento }} — Monto: {{ pg.monto }} — Estado: {{ pg.estado }}
+      </li>
+    {% empty %}
+      <li>Este préstamo aún no tiene pagos registrados.</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>
