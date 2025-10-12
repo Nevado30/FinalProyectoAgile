@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><title>Pagos pendientes</title></head>
+<body>
+  <h1>Pagos pendientes</h1>
+  <a href="{% url 'pagos:vencidos' %}">Ver vencidos</a> ·
+  <a href="{% url 'pagos:lista' %}">Ver todos</a>
+  <ul>
+    {% for pg in pagos %}
+      <li>
+        {{ pg.prestamo.persona.apellidos }}, {{ pg.prestamo.persona.nombres }}
+        — {{ pg.prestamo.banco }} — Cuota {{ pg.numero_cuota }}
+        — Vence: {{ pg.fecha_vencimiento }} — Monto: {{ pg.monto }}
+        <form method="post" action="{% url 'pagos:marcar_pagado' pg.id_pago %}" style="display:inline;">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button type="submit">Marcar pagado</button>
+        </form>
+      </li>
+    {% empty %}
+      <li>No tienes pagos pendientes.</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>

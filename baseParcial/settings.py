@@ -22,9 +22,10 @@ INSTALLED_APPS = [
     'Historial',
     'Pagos',
     'Persona',
-    'Prestamos',
     'Reportes',
     'Seguridad',
+
+     'Prestamos.apps.PrestamosConfig',
 ]
 
 MIDDLEWARE = [
