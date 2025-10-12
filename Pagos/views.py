@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from django.urls import reverse
 from .models import Pago
+from Moneda.services import obtener_tipo_cambio
 
 def pagos_pendientes(request):
     pagos = (Pago.objects
@@ -36,3 +37,18 @@ def lista_pagos(request):
                   .select_related('prestamo', 'prestamo__persona')
                   .order_by('fecha_vencimiento', 'numero_cuota'))
     return render(request, 'pagos/lista_pagos.html', {'pagos': pagos})
+
+def lista_pagos(request):
+    pagos = (Pago.objects
+                  .select_related('prestamo', 'prestamo__persona')
+                  .order_by('fecha_vencimiento', 'numero_cuota'))
+
+    # Tipo de cambio del día (cacheado)
+    tc = obtener_tipo_cambio(base="USD", destino="PEN", para_fecha=date.today())
+
+    pagos_ctx = []
+    for p in pagos:
+        monto_pen = p.monto * tc
+        pagos_ctx.append((p, monto_pen))
+
+    return render(request, 'pagos/lista_pagos.html', {'pagos_ctx': pagos_ctx, 'tc': tc})

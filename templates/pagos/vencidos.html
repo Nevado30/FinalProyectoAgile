@@ -1,27 +1,61 @@
 <!DOCTYPE html>
 <html lang="es">
-<head><meta charset="UTF-8"><title>Pagos vencidos</title></head>
+<head>
+  <meta charset="UTF-8" />
+  <title>Pagos vencidos</title>
+  <style>
+    table { width:100%; border-collapse: collapse; margin-top:12px; }
+    th, td { border:1px solid #ddd; padding:8px; text-align:left; }
+    th { background:#f7f7f7; }
+    .actions form { display:inline; }
+    .toolbar { display:flex; gap:12px; align-items:center; }
+  </style>
+</head>
 <body>
   <h1>Pagos vencidos</h1>
-  <a href="{% url 'pagos:pendientes' %}">Ver pendientes</a> ·
-  <a href="{% url 'pagos:lista' %}">Ver todos</a>
-  <ul>
-    {% for pg in pagos %}
-      <li>
-        {{ pg.prestamo.persona.apellidos }}, {{ pg.prestamo.persona.nombres }}
-        — {{ pg.prestamo.banco }} — Cuota {{ pg.numero_cuota }}
-        — Venció: {{ pg.fecha_vencimiento }} — Monto: {{ pg.monto }}
-        {% if pg.estado != 'Pagado' %}
-          <form method="post" action="{% url 'pagos:marcar_pagado' pg.id_pago %}" style="display:inline;">
-            {% csrf_token %}
-            <input type="hidden" name="next" value="{{ request.get_full_path }}">
-            <button type="submit">Marcar pagado</button>
-          </form>
-        {% endif %}
-      </li>
-    {% empty %}
-      <li>No hay pagos vencidos.</li>
-    {% endfor %}
-  </ul>
+  <div class="toolbar">
+    <a href="{% url 'pagos:pendientes' %}">Ver pendientes</a>
+    <a href="{% url 'pagos:lista' %}">Ver todos</a>
+    <span>• Tipo de cambio (USD→PEN) hoy: <strong>{{ tc }}</strong></span>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Persona</th>
+        <th>Banco</th>
+        <th>Cuota</th>
+        <th>Venció</th>
+        <th>Monto (USD)</th>
+        <th>Equivalente (PEN)</th>
+        <th>Estado</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p, monto_pen in pagos_ctx %}
+        <tr>
+          <td>{{ p.prestamo.persona.apellidos }}, {{ p.prestamo.persona.nombres }}</td>
+          <td>{{ p.prestamo.banco }}</td>
+          <td>{{ p.numero_cuota }}</td>
+          <td>{{ p.fecha_vencimiento }}</td>
+          <td>{{ p.monto }}</td>
+          <td>{{ monto_pen|floatformat:2 }}</td>
+          <td>{{ p.estado }}</td>
+          <td class="actions">
+            {% if p.estado != 'Pagado' %}
+              <form method="post" action="{% url 'pagos:marcar_pagado' p.id_pago %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit">Marcar pagado</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="8">No hay pagos vencidos.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </body>
 </html>

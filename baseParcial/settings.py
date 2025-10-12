@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'Persona',
     'Reportes',
     'Seguridad',
+    'Moneda',
 
      'Prestamos.apps.PrestamosConfig',
 ]

@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Reportes – Dashboard</title>
   <style>
-    .cards { display:flex; gap:16px; margin: 12px 0; }
+    .cards { display:flex; gap:16px; margin:12px 0; flex-wrap:wrap; }
     .card { border:1px solid #ddd; padding:12px; border-radius:8px; min-width:200px; }
-    table { width:100%; border-collapse: collapse; margin-top:12px; }
+    table { width:100%; border-collapse:collapse; margin-top:12px; }
     th, td { border:1px solid #ddd; padding:8px; text-align:left; }
     th { background:#f7f7f7; }
-    .filters { display:flex; gap:12px; align-items:center; margin: 12px 0; }
+    .filters { display:flex; gap:12px; align-items:center; margin:12px 0; flex-wrap:wrap; }
     .badge { padding:2px 8px; border-radius:12px; font-size:12px; border:1px solid #ccc; }
   </style>
 </head>
@@ -18,21 +18,13 @@
   <p>Mes actual: {{ primer_dia }} a {{ ultimo_dia }}</p>
 
   <div class="cards">
-    <div class="card">
-      <strong>Pendientes (global):</strong>
-      <div style="font-size:24px;">{{ total_pendientes }}</div>
-    </div>
-    <div class="card">
-      <strong>Vencidos (global):</strong>
-      <div style="font-size:24px;">{{ total_vencidos }}</div>
-    </div>
-    <div class="card">
-      <strong>Pagados en el mes:</strong>
-      <div style="font-size:24px;">{{ total_pagados_mes }}</div>
-    </div>
+    <div class="card"><strong>Pendientes (global):</strong><div style="font-size:24px;">{{ total_pendientes }}</div></div>
+    <div class="card"><strong>Vencidos (global):</strong><div style="font-size:24px;">{{ total_vencidos }}</div></div>
+    <div class="card"><strong>Pagados en el mes:</strong><div style="font-size:24px;">{{ total_pagados_mes }}</div></div>
   </div>
 
   <form method="get" class="filters">
+    <!-- Filtros existentes -->
     <label>
       Persona:
       <select name="persona" onchange="this.form.submit()">
@@ -57,8 +49,32 @@
       </select>
     </label>
 
-    <noscript><button type="submit">Filtrar</button></noscript>
+    <!-- Selector de moneda -->
+    <label>
+      Base:
+      <select name="base" onchange="this.form.submit()">
+        {% for b, d in PARES_MONEDA %}
+          {% if forloop.first %}{% endif %}
+        {% endfor %}
+        <option value="USD" {% if base == 'USD' %}selected{% endif %}>USD</option>
+        <option value="PEN" {% if base == 'PEN' %}selected{% endif %}>PEN</option>
+        <option value="EUR" {% if base == 'EUR' %}selected{% endif %}>EUR</option>
+      </select>
+    </label>
+
+    <label>
+      Destino:
+      <select name="destino" onchange="this.form.submit()">
+        <option value="PEN" {% if destino == 'PEN' %}selected{% endif %}>PEN</option>
+        <option value="USD" {% if destino == 'USD' %}selected{% endif %}>USD</option>
+        <option value="EUR" {% if destino == 'EUR' %}selected{% endif %}>EUR</option>
+      </select>
+    </label>
+
+    <noscript><button type="submit">Aplicar</button></noscript>
   </form>
+
+  <p>Tipo de cambio ({{ base }}→{{ destino }}) hoy: <strong>{{ tc }}</strong></p>
 
   <h2>Pagos del mes (por fecha de vencimiento)</h2>
   <table>
@@ -68,24 +84,24 @@
         <th>Banco</th>
         <th>Cuota</th>
         <th>Vence</th>
-        <th>Monto</th>
+        <th>Monto ({{ base }})</th>
+        <th>Equivalente ({{ destino }})</th>
         <th>Estado</th>
       </tr>
     </thead>
     <tbody>
-      {% for pg in pagos_mes %}
+      {% for p, monto_dest in pagos_mes_ctx %}
         <tr>
-          <td>{{ pg.prestamo.persona.apellidos }}, {{ pg.prestamo.persona.nombres }}</td>
-          <td>{{ pg.prestamo.banco }}</td>
-          <td>{{ pg.numero_cuota }}</td>
-          <td>{{ pg.fecha_vencimiento }}</td>
-          <td>{{ pg.monto }}</td>
-          <td>
-            <span class="badge">{{ pg.estado }}</span>
-          </td>
+          <td>{{ p.prestamo.persona.apellidos }}, {{ p.prestamo.persona.nombres }}</td>
+          <td>{{ p.prestamo.banco }}</td>
+          <td>{{ p.numero_cuota }}</td>
+          <td>{{ p.fecha_vencimiento }}</td>
+          <td>{{ p.monto }}</td>
+          <td>{{ monto_dest|floatformat:2 }}</td>
+          <td><span class="badge">{{ p.estado }}</span></td>
         </tr>
       {% empty %}
-        <tr><td colspan="6">No hay pagos para el mes con los filtros aplicados.</td></tr>
+        <tr><td colspan="7">No hay pagos para el mes con los filtros aplicados.</td></tr>
       {% endfor %}
     </tbody>
   </table>
