@@ -16,5 +16,13 @@ class Pago(models.Model):
     fecha_pago = models.DateField(blank=True, null=True)
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='Pendiente')
 
+    # --- Snapshot al pagar (para que no cambie con el selector de moneda) ---
+    base_fija = models.CharField(max_length=3, blank=True, null=True)
+    destino_fijo = models.CharField(max_length=3, blank=True, null=True)
+    tc_fijo = models.DecimalField(max_digits=12, decimal_places=6, blank=True, null=True)
+    monto_base_fijo = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    monto_destino_fijo = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    # ------------------------------------------------------------------------
+
     def __str__(self):
         return f"Cuota {self.numero_cuota} - {self.prestamo.banco} ({self.estado})"

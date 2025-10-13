@@ -68,3 +68,15 @@ tr:hover td{ background:#0c142c; }
 .msg.success{ background:#10281b; color:#86efac; }
 .msg.error{ background:#331418; color:#fecaca; }
 .msg.info{ background:#111933; color:#cbd5e1; }
+
+.auth-wrap{
+  min-height: calc(100vh - 120px); /* ocupa casi toda la altura */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-card{
+  width: 520px;          /* ajusta a tu gusto: 420–560px */
+  max-width: 95vw;
+}

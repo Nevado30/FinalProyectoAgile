@@ -9,9 +9,12 @@
   <link rel="stylesheet" href="{% static 'css/main.css' %}">
 </head>
 <body>
+
+  {# ▼ Ocultar navbar cuando NO hay sesión #}
+  {% if user.is_authenticated %}
   <header class="navbar">
     <div class="nav-left">
-      <a class="brand" href="/"> Gestor</a>
+      <a class="brand" href="/">Gestor</a>
     </div>
     <nav class="nav-right">
       <a class="nav-link {% if request.path|slice:':10' == '/reportes/' %}active{% endif %}" href="/reportes/">Reportes</a>
@@ -21,11 +24,10 @@
       <a class="btn btn-primary" href="/pagos/pendientes/">Ver pendientes</a>
     </nav>
   </header>
+  {% endif %}
 
   <main class="container">
-    {% block header %}
-      <!-- título de página opcional -->
-    {% endblock %}
+    {% block header %}{% endblock %}
 
     {% if messages %}
       <div class="messages">

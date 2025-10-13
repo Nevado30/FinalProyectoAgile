@@ -63,3 +63,11 @@ def obtener_tipo_cambio(base: str = "USD", destino: str = "PEN", para_fecha: dat
                 defaults={"valor": valor}
             )
         return tc.valor
+    
+def convertir_monto(monto, desde, hacia, para_fecha=None):
+    if desde == hacia:
+        return Decimal(monto)
+    if para_fecha is None:
+        para_fecha = date.today()
+    tc = Decimal(obtener_tipo_cambio(base=desde, destino=hacia, para_fecha=para_fecha))
+    return Decimal(monto) * tc

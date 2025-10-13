@@ -25,7 +25,7 @@
   <form method="get" class="filters">
     <label>
       Persona:
-      <select name="persona" onchange="this.form.submit()">
+      <select name="persona" onchange="this.form.submit">
         <option value="">(Todas)</option>
         {% for per in personas %}
           <option value="{{ per.id_persona }}" {% if persona_id == per.id_persona %}selected{% endif %}>
@@ -85,14 +85,14 @@
           </tr>
         </thead>
         <tbody>
-          {% for p, monto_dest in pagos_mes_ctx %}
+          {% for p, m_base, m_dest in pagos_mes_ctx %}
             <tr>
               <td>{{ p.prestamo.persona.apellidos }}, {{ p.prestamo.persona.nombres }}</td>
               <td>{{ p.prestamo.banco }}</td>
               <td>{{ p.numero_cuota }}</td>
               <td>{{ p.fecha_vencimiento }}</td>
-              <td>{{ p.monto }}</td>
-              <td>{{ monto_dest|floatformat:2 }}</td>
+              <td>{{ m_base|floatformat:2 }}</td>
+              <td>{{ m_dest|floatformat:2 }}</td>
               <td>
                 {% if p.estado == 'Pendiente' %}
                   <span class="badge badge-pendiente">Pendiente</span>

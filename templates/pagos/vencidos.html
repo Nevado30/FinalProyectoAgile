@@ -44,6 +44,8 @@
                 <form method="post" action="{% url 'pagos:marcar_pagado' p.id_pago %}">
                   {% csrf_token %}
                   <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <input type="hidden" name="base" value="{{ base }}">
+                  <input type="hidden" name="destino" value="{{ destino }}">
                   <button class="btn btn-success" type="submit">Marcar pagado ✓</button>
                 </form>
               {% else %}

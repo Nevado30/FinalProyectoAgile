@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Iniciar sesión{% endblock %}
+
+{% block header %}{% endblock %}
+
+{% block content %}
+  <div class="auth-wrap">
+    <div class="card auth-card">
+      <h1>Iniciar sesión</h1>
+      <form method="post">
+        {% csrf_token %}
+        <label>Email</label>
+        <input type="email" name="email" required style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);">
+
+        <label>Contraseña</label>
+        <input type="password" name="password" required style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);">
+
+        <label style="display:flex;gap:8px;align-items:center;margin:8px 0;">
+          <input type="checkbox" name="remember"> Recuérdame
+        </label>
+
+        <button class="btn btn-primary" type="submit">Entrar</button>
+
+        <p style="margin-top:12px;color:var(--muted);">
+          ¿Primera vez? <a href="/seguridad/email/">Verificar mi correo y crear cuenta</a>
+        </p>
+      </form>
+    </div>
+  </div>
+{% endblock %}
