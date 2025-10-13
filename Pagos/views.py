@@ -1,89 +1,102 @@
-from datetime import date
-from decimal import Decimal
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views.decorators.http import require_POST
-from django.urls import reverse
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
+from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
+from django.contrib import messages
 
 from .models import Pago
 from Moneda.services import obtener_tipo_cambio, convertir_monto
 
 
-@login_required
-def pagos_pendientes(request):
-    base = (request.GET.get('base') or 'PEN').upper()
-    destino = (request.GET.get('destino') or 'USD').upper()
-
-    pagos = (Pago.objects
-             .select_related('prestamo', 'prestamo__persona')
-             .filter(estado='Pendiente')
-             .order_by('fecha_vencimiento', 'prestamo__persona__apellidos', 'numero_cuota'))
-    return render(request, 'pagos/pendientes.html', {'pagos': pagos, 'base': base, 'destino': destino})
-
-
-@login_required
-def pagos_vencidos(request):
-    base = (request.GET.get('base') or 'PEN').upper()
-    destino = (request.GET.get('destino') or 'USD').upper()
-
-    hoy = date.today()
-    pagos = (Pago.objects
-             .select_related('prestamo', 'prestamo__persona')
-             .filter(estado__in=['Pendiente', 'Vencido'], fecha_vencimiento__lt=hoy)
-             .order_by('fecha_vencimiento'))
-    return render(request, 'pagos/vencidos.html', {'pagos': pagos, 'hoy': hoy, 'base': base, 'destino': destino})
-
-
-@login_required
-@require_POST
-def marcar_pagado(request, pago_id):
-    pago = get_object_or_404(Pago, pk=pago_id)
-    hoy = date.today()
-
-    base = (request.POST.get('base') or 'PEN').upper()
-    destino = (request.POST.get('destino') or 'USD').upper()
-    origen = getattr(pago.prestamo, 'moneda', 'PEN')
-
-    tc = Decimal(obtener_tipo_cambio(base=origen, destino=destino, para_fecha=hoy))
-    m_base = convertir_monto(pago.monto, desde=origen, hacia=base,    para_fecha=hoy)
-    m_dest = convertir_monto(pago.monto, desde=origen, hacia=destino, para_fecha=hoy)
-
-    pago.estado = 'Pagado'
-    pago.fecha_pago = hoy
-    pago.base_fija = base
-    pago.destino_fijo = destino
-    pago.tc_fijo = tc
-    pago.monto_base_fijo = m_base
-    pago.monto_destino_fijo = m_dest
-    pago.save()
-
-    next_url = request.POST.get('next') or reverse('pagos:pendientes')
-    return redirect(next_url)
+def _filas_convertidas(qs, base, destino):
+    filas = []
+    for p in qs.order_by('fecha_vencimiento', 'numero_cuota'):
+        try:
+            monto_base = convertir_monto(p.monto, base, base, p.fecha_vencimiento)
+            monto_destino = convertir_monto(p.monto, base, destino, p.fecha_vencimiento)
+        except Exception:
+            monto_base = p.monto
+            monto_destino = p.monto
+        filas.append({'pago': p, 'monto_base': monto_base, 'monto_destino': monto_destino})
+    return filas
 
 
 @login_required
 def lista_pagos(request):
     base = (request.GET.get('base') or 'PEN').upper()
-    destino = (request.GET.get('destino') or 'USD').upper()
+    destino = (request.GET.get('destino') or 'PEN').upper()
 
-    pagos = (Pago.objects
-             .select_related('prestamo', 'prestamo__persona')
-             .order_by('fecha_vencimiento', 'numero_cuota'))
+    qs = (Pago.objects
+          .filter(prestamo__persona__user=request.user)
+          .select_related('prestamo', 'prestamo__persona'))
 
-    hoy = date.today()
-    pagos_ctx = []
-    for p in pagos:
-        origen = getattr(p.prestamo, 'moneda', 'PEN')
-        if p.estado == 'Pagado' and p.monto_base_fijo is not None:
-            m_base = p.monto_base_fijo
-            m_dest = p.monto_destino_fijo
-        else:
-            m_base = convertir_monto(p.monto, desde=origen, hacia=base,    para_fecha=hoy)
-            m_dest = convertir_monto(p.monto, desde=origen, hacia=destino, para_fecha=hoy)
-        pagos_ctx.append((p, m_base, m_dest))
+    ctx = {
+        'base': base,
+        'destino': destino,
+        'filas': _filas_convertidas(qs, base, destino),
+    }
+    return render(request, 'pagos/lista_pagos.html', ctx)
 
-    return render(
-        request,
-        'pagos/lista_pagos.html',
-        {'pagos_ctx': pagos_ctx, 'base': base, 'destino': destino}
-    )
+
+@login_required
+def pagos_pendientes(request):
+    base = (request.GET.get('base') or 'PEN').upper()
+    destino = (request.GET.get('destino') or 'PEN').upper()
+
+    qs = (Pago.objects
+          .filter(prestamo__persona__user=request.user, estado='Pendiente')
+          .select_related('prestamo', 'prestamo__persona'))
+
+    ctx = {
+        'base': base,
+        'destino': destino,
+        'filas': _filas_convertidas(qs, base, destino),
+    }
+    return render(request, 'pagos/pendientes.html', ctx)
+
+
+@login_required
+def pagos_vencidos(request):
+    base = (request.GET.get('base') or 'PEN').upper()
+    destino = (request.GET.get('destino') or 'PEN').upper()
+    hoy = timezone.localdate()
+
+    qs = (Pago.objects
+          .filter(prestamo__persona__user=request.user, estado='Pendiente', fecha_vencimiento__lt=hoy)
+          .select_related('prestamo', 'prestamo__persona'))
+
+    ctx = {
+        'base': base,
+        'destino': destino,
+        'filas': _filas_convertidas(qs, base, destino),
+    }
+    return render(request, 'pagos/vencidos.html', ctx)
+
+
+@login_required
+@require_POST
+def marcar_pagado(request, pago_id: int):
+    pago = get_object_or_404(Pago, pk=pago_id, prestamo__persona__user=request.user)
+    pago.fecha_pago = timezone.now()
+    pago.estado = 'Pagado'
+
+    try:
+        base_mon = getattr(pago, 'base_fija', None) or 'PEN'
+        dest_mon = getattr(pago, 'destino_fijo', None) or 'PEN'
+        tc = obtener_tipo_cambio(base_mon, dest_mon, pago.fecha_pago.date())
+        if hasattr(pago, 'tc_fijo'):
+            pago.tc_fijo = tc
+        if hasattr(pago, 'monto_base_fijo'):
+            pago.monto_base_fijo = pago.monto
+        if hasattr(pago, 'monto_destino_fijo'):
+            pago.monto_destino_fijo = round(pago.monto * (tc or 1), 2)
+        if hasattr(pago, 'base_fija'):
+            pago.base_fija = base_mon
+        if hasattr(pago, 'destino_fijo'):
+            pago.destino_fijo = dest_mon
+    except Exception:
+        messages.warning(request, 'Pago marcado, pero no se pudo registrar el tipo de cambio.')
+
+    pago.save()
+    messages.success(request, 'Pago marcado como Pagado.')
+    return redirect('pagos:lista_pagos')

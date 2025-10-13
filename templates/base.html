@@ -6,7 +6,7 @@
   <title>{% block title %}Gestor de Pagos{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="{% static 'img/logo.svg' %}">
-  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+  <link rel="stylesheet" href="{% static 'css/main.css' %}?v={% now 'U' %}">
 </head>
 <body>
 

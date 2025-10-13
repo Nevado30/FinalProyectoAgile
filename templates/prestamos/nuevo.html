@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+  <h1 class="page-title">Nuevo préstamo</h1>
+
+  {% if form.non_field_errors %}
+    <div class="alert alert-error">{{ form.non_field_errors }}</div>
+  {% endif %}
+
+  <form method="post" class="form-card">
+    {% csrf_token %}
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="{{ form.banco.id_for_label }}">Banco</label>
+        {{ form.banco }}
+        {% if form.banco.errors %}<div class="error">{{ form.banco.errors|striptags }}</div>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.monto_total.id_for_label }}">Monto total</label>
+        {{ form.monto_total }}
+        {% if form.monto_total.errors %}<div class="error">{{ form.monto_total.errors|striptags }}</div>{% endif %}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="{{ form.descripcion.id_for_label }}">Descripción</label>
+      {{ form.descripcion }}
+      {% if form.descripcion.errors %}<div class="error">{{ form.descripcion.errors|striptags }}</div>{% endif %}
+      {% if form.fields.descripcion.help_text %}<div class="help">{{ form.fields.descripcion.help_text }}</div>{% endif %}
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="{{ form.tasa_interes.id_for_label }}">Tasa de interés (%)</label>
+        {{ form.tasa_interes }}
+        {% if form.tasa_interes.errors %}<div class="error">{{ form.tasa_interes.errors|striptags }}</div>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.fecha_inicio.id_for_label }}">Fecha de inicio</label>
+        {{ form.fecha_inicio }}
+        {% if form.fecha_inicio.errors %}<div class="error">{{ form.fecha_inicio.errors|striptags }}</div>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.cuotas_totales.id_for_label }}">Cuotas totales</label>
+        {{ form.cuotas_totales }}
+        {% if form.cuotas_totales.errors %}<div class="error">{{ form.cuotas_totales.errors|striptags }}</div>{% endif %}
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <a href="{% url 'prestamos:lista' %}" class="btn btn-secondary">Cancelar</a>
+      <button type="submit" class="btn btn-primary">Guardar</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,47 +1,49 @@
-{% extends 'base.html' %}
-{% block title %}Pagos pendientes{% endblock %}
-{% block header %}
-  <h1>Pagos pendientes</h1>
-  <a class="btn" href="{% url 'pagos:vencidos' %}">Ver vencidos</a>
-  <a class="btn" href="{% url 'pagos:lista' %}">Ver todos</a>
-{% endblock %}
+{% extends "base.html" %}
+
 {% block content %}
-  <div class="card">
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Persona</th>
-            <th>Banco</th>
-            <th>Cuota</th>
-            <th>Vence</th>
-            <th>Monto</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-        {% for p, monto_pen in pagos_ctx %}
-          <tr>
-            <td>{{ p.prestamo.persona.apellidos }}, {{ p.prestamo.persona.nombres }}</td>
-            <td>{{ p.prestamo.banco }}</td>
-            <td>{{ p.numero_cuota }}</td>
-            <td>{{ p.fecha_vencimiento }}</td>
-            <td>{{ p.monto }}</td>
-            <td>
-              <form method="post" action="{% url 'pagos:marcar_pagado' p.id_pago %}">
-                {% csrf_token %}
-                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <input type="hidden" name="base" value="{{ base }}">
-                <input type="hidden" name="destino" value="{{ destino }}">
-                <button class="btn btn-success" type="submit">Marcar pagado ✓</button>
-              </form>
-            </td>
-          </tr>
-        {% empty %}
-          <tr><td colspan="6">No tienes pagos pendientes.</td></tr>
-        {% endfor %}
-        </tbody>
-      </table>
-    </div>
+<div class="container">
+  <h1 class="page-title">Pagos pendientes</h1>
+  <div class="toolbar">
+    <a class="btn btn-secondary" href="{% url 'pagos:lista_pagos' %}">Ver todos</a>
+    <a class="btn btn-secondary" href="{% url 'pagos:vencidos' %}">Ver vencidos</a>
   </div>
+
+  <div class="card table-card">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Persona</th>
+          <th>Banco</th>
+          <th>Cuota</th>
+          <th>Vence</th>
+          <th>Monto ({{ base }})</th>
+          <th>Equivalente ({{ destino }})</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if filas %}
+          {% for f in filas %}
+            <tr>
+              <td>{{ f.pago.prestamo.persona.apellidos }}, {{ f.pago.prestamo.persona.nombres }}</td>
+              <td>{{ f.pago.prestamo.banco }}</td>
+              <td>{{ f.pago.numero_cuota }}</td>
+              <td>{{ f.pago.fecha_vencimiento|date:"d/m/Y" }}</td>
+              <td>{{ f.monto_base }}</td>
+              <td>{{ f.monto_destino }}</td>
+              <td>
+                <form method="post" action="{% url 'pagos:marcar_pagado' f.pago.id_pago %}">
+                  {% csrf_token %}
+                  <button class="btn btn-primary" type="submit">Marcar pagado</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="7">No hay pagos pendientes.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endblock %}

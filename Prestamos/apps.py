@@ -5,4 +5,5 @@ class PrestamosConfig(AppConfig):
     name = 'Prestamos'
 
     def ready(self):
-        import Prestamos.signals  # noqa
+        # registra las señales
+        from . import signals  # noqa

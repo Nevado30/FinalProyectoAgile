@@ -80,3 +80,32 @@ tr:hover td{ background:#0c142c; }
   width: 520px;          /* ajusta a tu gusto: 420–560px */
   max-width: 95vw;
 }
+
+/* ---- Formularios genéricos ---- */
+.form-card { max-width: 640px; margin: 0 auto; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display:block; margin-bottom:6px; font-weight:600; }
+
+.input,
+.textarea,
+.form-card input[type="text"],
+.form-card input[type="number"],
+.form-card input[type="date"],
+.form-card textarea {
+  width: 100%;
+  background: #0f1a28;
+  border: 1px solid #2a3a4f;
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #e6ecf1;
+}
+
+.textarea { min-height: 90px; resize: vertical; }
+
+.help { margin-top: 6px; font-size: .9rem; opacity: .7; }
+
+.form-actions { display:flex; gap:10px; margin-top: 10px; }
+.btn { padding: 8px 14px; border-radius: 10px; cursor: pointer; }
+.btn-primary { background:#5967ff; color:#fff; border:0; }
+.btn-secondary { background:#1b2636; color:#e6ecf1; border:1px solid #2a3a4f; }

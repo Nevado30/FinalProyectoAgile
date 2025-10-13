@@ -1,13 +1,18 @@
 from django.contrib import admin
 from django.urls import path, include
-from django.views.generic import RedirectView
+from .views import home_redirect
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', RedirectView.as_view(url='/seguridad/login/', permanent=False)),
+    # Raíz: decide a dónde ir según autenticación
+    path('', home_redirect, name='home'),
+
+    # Apps
+    path('seguridad/', include('Seguridad.urls')),
     path('personas/', include('Persona.urls')),
     path('prestamos/', include('Prestamos.urls')),
     path('pagos/', include('Pagos.urls')),
     path('reportes/', include('Reportes.urls')),
-    path('seguridad/', include('Seguridad.urls')),
+
+    # Admin de Django
+    path('admin/', admin.site.urls),
 ]

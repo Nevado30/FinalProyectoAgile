@@ -1,113 +1,120 @@
-{% extends 'base.html' %}
-{% block title %}Reportes{% endblock %}
-
-{% block header %}
-  <h1>Dashboard de Reportes</h1>
-  <p>Mes actual: {{ primer_dia }} a {{ ultimo_dia }}</p>
-{% endblock %}
+{% extends "base.html" %}
+{% load static %}
 
 {% block content %}
-  <div class="cards">
+<div class="container">
+
+  <h1 class="page-title">Dashboard de Reportes</h1>
+  <p class="page-subtitle">
+    Mes actual:
+    {{ primer_dia|date:"j \\d\\e F \\d\\e Y" }}
+    a
+    {{ ultimo_dia|date:"j \\d\\e F \\d\\e Y" }}
+  </p>
+
+  {% if mensaje_persona %}
     <div class="card">
-      <strong>Pendientes (global):</strong>
-      <div style="font-size:24px;">{{ total_pendientes }}</div>
+      {{ mensaje_persona }}
+    </div>
+  {% else %}
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-label">Pendientes (global):</div>
+      <div class="card-value">{{ pendientes_count }}</div>
     </div>
     <div class="card">
-      <strong>Vencidos (global):</strong>
-      <div style="font-size:24px;">{{ total_vencidos }}</div>
+      <div class="card-label">Vencidos (global):</div>
+      <div class="card-value">{{ vencidos_count }}</div>
     </div>
     <div class="card">
-      <strong>Pagados en el mes:</strong>
-      <div style="font-size:24px;">{{ total_pagados_mes }}</div>
+      <div class="card-label">Pagados en el mes:</div>
+      <div class="card-value">{{ pagados_mes_count }}</div>
     </div>
   </div>
 
   <form method="get" class="filters">
-    <label>
-      Persona:
-      <select name="persona" onchange="this.form.submit">
-        <option value="">(Todas)</option>
-        {% for per in personas %}
-          <option value="{{ per.id_persona }}" {% if persona_id == per.id_persona %}selected{% endif %}>
-            {{ per.apellidos }}, {{ per.nombres }}
-          </option>
-        {% endfor %}
-      </select>
-    </label>
+    <label>Préstamo:</label>
+    <select name="prestamo">
+      <option value="">(Todos)</option>
+      {% for pr in prestamos %}
+        <option value="{{ pr.id_prestamo }}" {% if pr.id_prestamo|stringformat:"s" == prestamo_id %}selected{% endif %}>
+          {{ pr.banco }} — #{{ pr.id_prestamo }}
+        </option>
+      {% endfor %}
+    </select>
 
-    <label>
-      Préstamo:
-      <select name="prestamo" onchange="this.form.submit()">
-        <option value="">(Todos)</option>
-        {% for pr in prestamos %}
-          <option value="{{ pr.id_prestamo }}" {% if prestamo_id == pr.id_prestamo %}selected{% endif %}>
-            {{ pr.persona.apellidos }}, {{ pr.persona.nombres }} – {{ pr.banco }}
-          </option>
-        {% endfor %}
-      </select>
-    </label>
+    <label>Base:</label>
+    <select name="base">
+      {% for b,d in PARES_MONEDA %}
+        {% ifchanged b %}
+          <option value="{{ b }}" {% if b == base %}selected{% endif %}>{{ b }}</option>
+        {% endifchanged %}
+      {% endfor %}
+    </select>
 
-    <label>
-      Base:
-      <select name="base" onchange="this.form.submit()">
-        <option value="USD" {% if base == 'USD' %}selected{% endif %}>USD</option>
-        <option value="PEN" {% if base == 'PEN' %}selected{% endif %}>PEN</option>
-        <option value="EUR" {% if base == 'EUR' %}selected{% endif %}>EUR</option>
-      </select>
-    </label>
+    <label>Destino:</label>
+    <select name="destino">
+      {% for b,d in PARES_MONEDA %}
+        {% ifchanged d %}
+          <option value="{{ d }}" {% if d == destino %}selected{% endif %}>{{ d }}</option>
+        {% endifchanged %}
+      {% endfor %}
+    </select>
 
-    <label>
-      Destino:
-      <select name="destino" onchange="this.form.submit()">
-        <option value="PEN" {% if destino == 'PEN' %}selected{% endif %}>PEN</option>
-        <option value="USD" {% if destino == 'USD' %}selected{% endif %}>USD</option>
-        <option value="EUR" {% if destino == 'EUR' %}selected{% endif %}>EUR</option>
-      </select>
-    </label>
-
-    <noscript><button type="submit" class="btn">Aplicar</button></noscript>
+    <button type="submit" class="btn">Aplicar</button>
   </form>
 
-  <p>Tipo de cambio ({{ base }}→{{ destino }}) hoy: <strong>{{ tc }}</strong></p>
-
   <div class="card">
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Persona</th>
-            <th>Banco</th>
-            <th>Cuota</th>
-            <th>Vence</th>
-            <th>Monto ({{ base }})</th>
-            <th>Equivalente ({{ destino }})</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for p, m_base, m_dest in pagos_mes_ctx %}
+    <div class="muted">
+      Tipo de cambio ({{ base }}→{{ destino }}) hoy:
+      <strong>{% if tc_hoy %}{{ tc_hoy }}{% else %}—{% endif %}</strong>
+    </div>
+  </div>
+
+  <div class="card table-card">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Persona</th>
+          <th>Banco</th>
+          <th>Cuota</th>
+          <th>Vence</th>
+          <th>Monto ({{ base }})</th>
+          <th>Equivalente ({{ destino }})</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if filas %}
+          {% for f in filas %}
             <tr>
-              <td>{{ p.prestamo.persona.apellidos }}, {{ p.prestamo.persona.nombres }}</td>
-              <td>{{ p.prestamo.banco }}</td>
-              <td>{{ p.numero_cuota }}</td>
-              <td>{{ p.fecha_vencimiento }}</td>
-              <td>{{ m_base|floatformat:2 }}</td>
-              <td>{{ m_dest|floatformat:2 }}</td>
+              <td>{{ f.pago.prestamo.persona.apellidos }}, {{ f.pago.prestamo.persona.nombres }}</td>
+              <td>{{ f.pago.prestamo.banco }}</td>
+              <td>{{ f.pago.numero_cuota }}</td>
+              <td>{{ f.pago.fecha_vencimiento|date:"d/m/Y" }}</td>
+              <td>{{ f.monto_base }}</td>
+              <td>{{ f.monto_destino }}</td>
               <td>
-                {% if p.estado == 'Pendiente' %}
-                  <span class="badge badge-pendiente">Pendiente</span>
-                {% elif p.estado == 'Vencido' %}
-                  <span class="badge badge-vencido">Vencido</span>
+                {% if f.pago.estado == 'Pagado' %}
+                  Pagado
+                {% elif f.pago.estado == 'Pendiente' and f.pago.fecha_vencimiento < today %}
+                  Vencido
                 {% else %}
-                  <span class="badge badge-pagado">Pagado</span>
+                  Pendiente
                 {% endif %}
               </td>
             </tr>
-          {% empty %}
-            <tr><td colspan="7">No hay pagos para el mes con los filtros aplicados.</td></tr>
           {% endfor %}
-        </tbody>
-      </table>
-    </div>
+        {% else %}
+          <tr>
+            <td colspan="7">No hay pagos para el mes con los filtros aplicados.</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
   </div>
+
+  {% endif %}
+</div>
 {% endblock %}
