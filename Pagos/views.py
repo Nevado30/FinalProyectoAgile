@@ -5,73 +5,53 @@ from django.utils import timezone
 from django.contrib import messages
 
 from .models import Pago
-from Moneda.services import obtener_tipo_cambio, convertir_monto
+from Moneda.services import convertir_monto, obtener_tipo_cambio
 
-
-def _filas_convertidas(qs, base, destino):
-    filas = []
-    for p in qs.order_by('fecha_vencimiento', 'numero_cuota'):
-        try:
-            monto_base = convertir_monto(p.monto, base, base, p.fecha_vencimiento)
-            monto_destino = convertir_monto(p.monto, base, destino, p.fecha_vencimiento)
-        except Exception:
-            monto_base = p.monto
-            monto_destino = p.monto
-        filas.append({'pago': p, 'monto_base': monto_base, 'monto_destino': monto_destino})
-    return filas
-
+def _fila(pago, a_moneda):
+    origen = pago.prestamo.moneda_prestamo or 'PEN'
+    monto_base = convertir_monto(pago.monto, origen, a_moneda, pago.fecha_vencimiento)
+    # Para un equivalente opcional en otra moneda podrías agregarlo según query param
+    return {'pago': pago, 'monto_base': monto_base, 'monto_destino': None}
 
 @login_required
 def lista_pagos(request):
-    base = (request.GET.get('base') or 'PEN').upper()
-    destino = (request.GET.get('destino') or 'PEN').upper()
+    persona = getattr(request.user, 'persona', None)
+    base = (persona.moneda_preferida if persona and persona.moneda_preferida else 'PEN').upper()
 
     qs = (Pago.objects
           .filter(prestamo__persona__user=request.user)
-          .select_related('prestamo', 'prestamo__persona'))
+          .select_related('prestamo', 'prestamo__persona')
+          .order_by('fecha_vencimiento', 'numero_cuota'))
 
-    ctx = {
-        'base': base,
-        'destino': destino,
-        'filas': _filas_convertidas(qs, base, destino),
-    }
-    return render(request, 'pagos/lista_pagos.html', ctx)
-
+    filas = [_fila(p, base) for p in qs]
+    return render(request, 'pagos/lista_pagos.html', {'filas': filas, 'base': base})
 
 @login_required
 def pagos_pendientes(request):
-    base = (request.GET.get('base') or 'PEN').upper()
-    destino = (request.GET.get('destino') or 'PEN').upper()
+    persona = getattr(request.user, 'persona', None)
+    base = (persona.moneda_preferida if persona and persona.moneda_preferida else 'PEN').upper()
 
     qs = (Pago.objects
           .filter(prestamo__persona__user=request.user, estado='Pendiente')
-          .select_related('prestamo', 'prestamo__persona'))
+          .select_related('prestamo', 'prestamo__persona')
+          .order_by('fecha_vencimiento', 'numero_cuota'))
 
-    ctx = {
-        'base': base,
-        'destino': destino,
-        'filas': _filas_convertidas(qs, base, destino),
-    }
-    return render(request, 'pagos/pendientes.html', ctx)
-
+    filas = [_fila(p, base) for p in qs]
+    return render(request, 'pagos/pendientes.html', {'filas': filas, 'base': base})
 
 @login_required
 def pagos_vencidos(request):
-    base = (request.GET.get('base') or 'PEN').upper()
-    destino = (request.GET.get('destino') or 'PEN').upper()
+    persona = getattr(request.user, 'persona', None)
+    base = (persona.moneda_preferida if persona and persona.moneda_preferida else 'PEN').upper()
     hoy = timezone.localdate()
 
     qs = (Pago.objects
           .filter(prestamo__persona__user=request.user, estado='Pendiente', fecha_vencimiento__lt=hoy)
-          .select_related('prestamo', 'prestamo__persona'))
+          .select_related('prestamo', 'prestamo__persona')
+          .order_by('fecha_vencimiento', 'numero_cuota'))
 
-    ctx = {
-        'base': base,
-        'destino': destino,
-        'filas': _filas_convertidas(qs, base, destino),
-    }
-    return render(request, 'pagos/vencidos.html', ctx)
-
+    filas = [_fila(p, base) for p in qs]
+    return render(request, 'pagos/vencidos.html', {'filas': filas, 'base': base})
 
 @login_required
 @require_POST
@@ -81,8 +61,8 @@ def marcar_pagado(request, pago_id: int):
     pago.estado = 'Pagado'
 
     try:
-        base_mon = getattr(pago, 'base_fija', None) or 'PEN'
-        dest_mon = getattr(pago, 'destino_fijo', None) or 'PEN'
+        base_mon = pago.prestamo.moneda_prestamo or 'PEN'
+        dest_mon = (getattr(request.user.persona, 'moneda_preferida', None) or 'PEN').upper()
         tc = obtener_tipo_cambio(base_mon, dest_mon, pago.fecha_pago.date())
         if hasattr(pago, 'tc_fijo'):
             pago.tc_fijo = tc

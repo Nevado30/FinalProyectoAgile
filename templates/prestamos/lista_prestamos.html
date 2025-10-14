@@ -17,7 +17,7 @@
           <th>Monto total</th>
           <th>Cuotas</th>
           <th>Inicio</th>
-          <th></th>
+          <th colspan="2"></th>
         </tr>
       </thead>
       <tbody>
@@ -30,10 +30,14 @@
             <td>{{ pr.fecha_inicio|date:"d/m/Y" }}</td>
             <td class="table-actions">
               <a class="btn btn-secondary" href="{% url 'prestamos:pagos_por_prestamo' pr.id_prestamo %}">Ver pagos</a>
+              <a class="btn btn-secondary" href="{% url 'prestamos:editar' pr.id_prestamo %}">Editar</a>
+            </td>
+            <td class="table-actions">
+              <a class="btn btn-danger" href="{% url 'prestamos:eliminar' pr.id_prestamo %}">Eliminar</a>
             </td>
           </tr>
         {% empty %}
-          <tr><td colspan="6">No hay préstamos registrados.</td></tr>
+          <tr><td colspan="7">No hay préstamos registrados.</td></tr>
         {% endfor %}
       </tbody>
     </table>

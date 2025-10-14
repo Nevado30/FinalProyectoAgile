@@ -1,74 +1,29 @@
 {% extends "base.html" %}
-{% load static %}
+{% block title %}Reportes{% endblock %}
 
 {% block content %}
 <div class="container">
-
   <h1 class="page-title">Dashboard de Reportes</h1>
   <p class="page-subtitle">
     Mes actual:
     {{ primer_dia|date:"j \\d\\e F \\d\\e Y" }}
-    a
+    —
     {{ ultimo_dia|date:"j \\d\\e F \\d\\e Y" }}
   </p>
 
-  {% if mensaje_persona %}
+  <div class="cards">
     <div class="card">
-      {{ mensaje_persona }}
-    </div>
-  {% else %}
-
-  <div class="grid-3">
-    <div class="card">
-      <div class="card-label">Pendientes (global):</div>
-      <div class="card-value">{{ pendientes_count }}</div>
+      <div class="card-title">Este mes debes pagar</div>
+      <div class="metric">{{ total_pendientes }}</div>
+      <div class="muted">en {{ base }}</div>
     </div>
     <div class="card">
-      <div class="card-label">Vencidos (global):</div>
-      <div class="card-value">{{ vencidos_count }}</div>
+      <div class="card-title">Pagado en el mes</div>
+      <div class="metric">{{ total_pagados_mes }}</div>
     </div>
     <div class="card">
-      <div class="card-label">Pagados en el mes:</div>
-      <div class="card-value">{{ pagados_mes_count }}</div>
-    </div>
-  </div>
-
-  <form method="get" class="filters">
-    <label>Préstamo:</label>
-    <select name="prestamo">
-      <option value="">(Todos)</option>
-      {% for pr in prestamos %}
-        <option value="{{ pr.id_prestamo }}" {% if pr.id_prestamo|stringformat:"s" == prestamo_id %}selected{% endif %}>
-          {{ pr.banco }} — #{{ pr.id_prestamo }}
-        </option>
-      {% endfor %}
-    </select>
-
-    <label>Base:</label>
-    <select name="base">
-      {% for b,d in PARES_MONEDA %}
-        {% ifchanged b %}
-          <option value="{{ b }}" {% if b == base %}selected{% endif %}>{{ b }}</option>
-        {% endifchanged %}
-      {% endfor %}
-    </select>
-
-    <label>Destino:</label>
-    <select name="destino">
-      {% for b,d in PARES_MONEDA %}
-        {% ifchanged d %}
-          <option value="{{ d }}" {% if d == destino %}selected{% endif %}>{{ d }}</option>
-        {% endifchanged %}
-      {% endfor %}
-    </select>
-
-    <button type="submit" class="btn">Aplicar</button>
-  </form>
-
-  <div class="card">
-    <div class="muted">
-      Tipo de cambio ({{ base }}→{{ destino }}) hoy:
-      <strong>{% if tc_hoy %}{{ tc_hoy }}{% else %}—{% endif %}</strong>
+      <div class="card-title">Vencidos del mes</div>
+      <div class="metric">{{ total_vencidos }}</div>
     </div>
   </div>
 
@@ -86,35 +41,21 @@
         </tr>
       </thead>
       <tbody>
-        {% if filas %}
-          {% for f in filas %}
-            <tr>
-              <td>{{ f.pago.prestamo.persona.apellidos }}, {{ f.pago.prestamo.persona.nombres }}</td>
-              <td>{{ f.pago.prestamo.banco }}</td>
-              <td>{{ f.pago.numero_cuota }}</td>
-              <td>{{ f.pago.fecha_vencimiento|date:"d/m/Y" }}</td>
-              <td>{{ f.monto_base }}</td>
-              <td>{{ f.monto_destino }}</td>
-              <td>
-                {% if f.pago.estado == 'Pagado' %}
-                  Pagado
-                {% elif f.pago.estado == 'Pendiente' and f.pago.fecha_vencimiento < today %}
-                  Vencido
-                {% else %}
-                  Pendiente
-                {% endif %}
-              </td>
-            </tr>
-          {% endfor %}
-        {% else %}
+        {% for f in filas %}
           <tr>
-            <td colspan="7">No hay pagos para el mes con los filtros aplicados.</td>
+            <td>{{ f.pago.prestamo.persona.apellidos }}, {{ f.pago.prestamo.persona.nombres }}</td>
+            <td>{{ f.pago.prestamo.banco }}</td>
+            <td>{{ f.pago.numero_cuota }}</td>
+            <td>{{ f.pago.fecha_vencimiento|date:"d/m/Y" }}</td>
+            <td>{{ f.monto_base }}</td>
+            <td>{{ f.monto_destino }}</td>
+            <td>{{ f.pago.estado }}</td>
           </tr>
-        {% endif %}
+        {% empty %}
+          <tr><td colspan="7">No hay pagos en este mes.</td></tr>
+        {% endfor %}
       </tbody>
     </table>
   </div>
-
-  {% endif %}
 </div>
 {% endblock %}

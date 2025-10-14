@@ -1,81 +1,96 @@
 from datetime import date, timedelta
 from django.conf import settings
 from django.core.mail import send_mail
+
+from Persona.models import Persona
 from Pagos.models import Pago
-from .models import Alerta
+from Moneda.services import convertir_monto
 
-def _enviar_correo(destinatario: str, asunto: str, cuerpo: str) -> bool:
+from .sms import send_sms
+
+
+def _parse_days(raw: str, fallback=3):
+    """Convierte '7,3,1,0' -> [7,3,1,0] (únicos, >=0, orden desc)."""
     try:
-        send_mail(
-            subject=asunto,
-            message=cuerpo,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[destinatario],
-            fail_silently=False,
-        )
-        return True
+        parts = [s.strip() for s in (raw or '').split(',')]
+        vals = [int(v) for v in parts if v != '']
+        vals = sorted(set(v for v in vals if v >= 0), reverse=True)
+        return vals or [fallback]
     except Exception:
+        return [fallback]
+
+
+def _send_email(to, subject, body) -> bool:
+    if not to:
         return False
+    send_mail(
+        subject=subject,
+        message=body,
+        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None) or 'no-reply@example.com',
+        recipient_list=[to],
+        fail_silently=False,
+    )
+    return True
 
-def generar_y_enviar_alertas(dias_antes: int = 3) -> dict:
-    """
-    - Encuentra pagos 'Pendiente' cuyo vencimiento sea HOY o dentro de N días.
-    - Crea registro Alerta si no existe y envía correo.
-    - También envía correo para pagos 'Pendiente' vencidos (fecha_vencimiento < hoy).
-    Devuelve resumen {'creadas': n, 'enviadas': n, 'vencidas': n}.
-    """
+
+def generar_y_enviar_alertas(dias_antes: int = None):
     hoy = date.today()
-    hasta = hoy + timedelta(days=dias_antes)
+    creadas = 0
+    enviadas = 0
 
-    # Próximos a vencer
-    proximos = Pago.objects.select_related('prestamo__persona') \
-        .filter(estado='Pendiente', fecha_vencimiento__gte=hoy, fecha_vencimiento__lte=hasta)
-
-    # Ya vencidos (aún Pendiente)
-    vencidos = Pago.objects.select_related('prestamo__persona') \
-        .filter(estado='Pendiente', fecha_vencimiento__lt=hoy)
-
-    creadas = enviadas = vencidas_count = 0
-
-    # Helper local
-    def procesar_pago(pago, es_vencido=False):
-        nonlocal creadas, enviadas, vencidas_count
-        persona = pago.prestamo.persona
-        if not persona.correo:
-            return
-        # Evitar duplicados: una alerta por pago y fecha_alerta (hoy)
-        alerta, creada = Alerta.objects.get_or_create(
-            pago=pago, fecha_alerta=hoy,
-            defaults={
-                'mensaje': f"Recordatorio de pago de la cuota {pago.numero_cuota} "
-                           f"del préstamo en {pago.prestamo.banco}. "
-                           f"Vence el {pago.fecha_vencimiento}. Monto: {pago.monto}",
-                'estado': 'Pendiente'
-            }
+    for persona in Persona.objects.all():
+        base = (getattr(persona, 'moneda_preferida', None) or 'PEN').upper()
+        dias_list = _parse_days(
+            getattr(persona, 'noti_dias', ''),
+            fallback=(dias_antes if dias_antes is not None else 3),
         )
-        if creada:
-            creadas += 1
-        # Enviar correo si aún está Pendiente
-        asunto = ("Pago VENCIDO" if es_vencido else "Recordatorio de pago próximo")
-        cuerpo = (f"Hola {persona.nombres},\n\n"
-                  f"{'Tu pago está VENCIDO' if es_vencido else 'Tienes un pago próximo'}.\n\n"
-                  f"Banco: {pago.prestamo.banco}\n"
-                  f"Cuota: {pago.numero_cuota}\n"
-                  f"Vencimiento: {pago.fecha_vencimiento}\n"
-                  f"Monto: {pago.monto}\n\n"
-                  f"Por favor realiza el pago para evitar cargos adicionales.\n\n"
-                  f"Saludos.")
-        ok = _enviar_correo(persona.correo, asunto, cuerpo)
-        if ok:
-            alerta.estado = 'Enviada'
-            alerta.save(update_fields=['estado'])
-            enviadas += 1
-        if es_vencido:
-            vencidas_count += 1
+        fechas_obj = [hoy + timedelta(days=d) for d in dias_list]
 
-    for p in proximos:
-        procesar_pago(p, es_vencido=False)
-    for p in vencidos:
-        procesar_pago(p, es_vencido=True)
+        qs = Pago.objects.filter(prestamo__persona=persona, estado='Pendiente')
+        proximos = qs.filter(fecha_vencimiento__in=fechas_obj)
+        vencidos = qs.filter(fecha_vencimiento__lt=hoy)
 
-    return {'creadas': creadas, 'enviadas': enviadas, 'vencidas': vencidas_count}
+        def cuerpo_email(pago):
+            origen = pago.prestamo.moneda_prestamo or 'PEN'
+            monto = convertir_monto(pago.monto, origen, base, pago.fecha_vencimiento)
+            return (
+                f"Hola {persona.nombres},\n\n"
+                f"Cuota {pago.numero_cuota} del préstamo en {pago.prestamo.banco}.\n"
+                f"Vence: {pago.fecha_vencimiento}.\n"
+                f"Monto a pagar (en {base}): {monto}.\n\n"
+                "Ingresa a la app para marcar el pago."
+            )
+
+        def cuerpo_sms(pago):
+            origen = pago.prestamo.moneda_prestamo or 'PEN'
+            monto = convertir_monto(pago.monto, origen, base, pago.fecha_vencimiento)
+            return (
+                f"Cuota {pago.numero_cuota} {pago.prestamo.banco} "
+                f"vence {pago.fecha_vencimiento}. "
+                f"Importe: {monto} {base}"
+            )
+
+        # --- EMAIL ---
+        if getattr(persona, 'noti_email', False):
+            for p in proximos:
+                if _send_email(persona.correo, f"[Recordatorio] Cuota {p.numero_cuota}", cuerpo_email(p)):
+                    enviadas += 1
+            for p in vencidos:
+                if _send_email(persona.correo, f"[Vencido] Cuota {p.numero_cuota}", cuerpo_email(p)):
+                    enviadas += 1
+
+        # --- SMS ---
+        if getattr(persona, 'noti_sms', False) and getattr(persona, 'telefono', None):
+            for p in proximos:
+                ok, _ = send_sms(persona.telefono, cuerpo_sms(p))
+                if ok:
+                    enviadas += 1
+            for p in vencidos:
+                ok, _ = send_sms(persona.telefono, "[Vencido] " + cuerpo_sms(p))
+                if ok:
+                    enviadas += 1
+
+        # Total de alertas generadas (independiente del canal)
+        creadas += proximos.count() + vencidos.count()
+
+    return {'creadas': creadas, 'enviadas': enviadas}

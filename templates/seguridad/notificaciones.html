@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+  <h1 class="page-title">Configuración de notificaciones</h1>
+
+  <form method="post" class="form-card">
+    {% csrf_token %}
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Canales</label>
+        <label class="inline">
+          <input type="checkbox" name="{{ form.noti_email.name }}" id="{{ form.noti_email.id_for_label }}"
+                 {% if form.instance.noti_email %}checked{% endif %}> Correo electrónico
+        </label>
+        <label class="inline" style="margin-top:6px;">
+          <input type="checkbox" name="{{ form.noti_sms.name }}" id="{{ form.noti_sms.id_for_label }}"
+                 {% if form.instance.noti_sms %}checked{% endif %}> SMS / WhatsApp (requiere teléfono)
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.telefono.id_for_label }}">Teléfono</label>
+        {{ form.telefono }}
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="{{ form.noti_dias.id_for_label }}">Días de anticipación</label>
+        {{ form.noti_dias }}
+        <div class="help">Ej: <code>7,3,1,0</code> avisa 7 y 3 días antes, 1 día antes y el mismo día.</div>
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.moneda_preferida.id_for_label }}">Moneda preferida</label>
+        {{ form.moneda_preferida }}
+      </div>
+    </div>
+
+   <div class="form-actions">
+     <a href="/personas/" class="btn btn-secondary">Volver</a>
+     <a href="{% url 'reportes:dashboard' %}" class="btn btn-secondary">Cancelar</a>
+     <button type="submit" class="btn btn-primary">Guardar</button>
+    </div>
+
+  </form>
+</div>
+{% endblock %}

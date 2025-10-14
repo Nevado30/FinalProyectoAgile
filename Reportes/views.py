@@ -1,127 +1,86 @@
-from datetime import date
-import calendar
+from datetime import date, timedelta
+from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
 from Pagos.models import Pago
-from Prestamos.models import Prestamo
-from Moneda.services import convertir_monto, obtener_tipo_cambio
+from Moneda.services import convertir_monto
 
-# Pares disponibles
-PARES_MONEDA = [
-    ("PEN", "PEN"),
-    ("PEN", "USD"),
-    ("PEN", "EUR"),
-    ("USD", "USD"),
-    ("USD", "PEN"),
-    ("USD", "EUR"),
-    ("EUR", "EUR"),
-    ("EUR", "PEN"),
-    ("EUR", "USD"),
-]
+def _month_bounds(d: date):
+    first = d.replace(day=1)
+    if first.month == 12:
+        nxt = first.replace(year=first.year + 1, month=1, day=1)
+    else:
+        nxt = first.replace(month=first.month + 1, day=1)
+    last = nxt - timedelta(days=1)
+    return first, last
 
 @login_required
 def dashboard(request):
-    """
-    Dashboard mensual por USUARIO (multi-tenant).
-      - Cantidad de pendientes (global del usuario)
-      - Cantidad de vencidos (pendiente con fecha < hoy)
-      - Cantidad de pagados en el mes
-      - Tabla de pagos del mes con conversión base→destino
-    """
-    hoy = date.today()
-    primer_dia = date(hoy.year, hoy.month, 1)
-    ultimo_dia = date(hoy.year, hoy.month, calendar.monthrange(hoy.year, hoy.month)[1])
-
-    base = (request.GET.get('base') or "PEN").upper()
-    destino = (request.GET.get('destino') or "PEN").upper()
-    prestamo_id = (request.GET.get('prestamo') or "").strip()
-
     persona = getattr(request.user, 'persona', None)
+    if not persona:
+        return render(request, 'reportes/dashboard.html', {'mensaje_persona': 'Completa tu perfil para ver reportes.'})
 
-    # Si el usuario no tiene Persona vinculada, mostramos aviso
-    if persona is None:
-        ctx = {
-            'mensaje_persona': 'Tu usuario no está vinculado a una Persona. Completa tu perfil para ver datos.',
-            'PARES_MONEDA': PARES_MONEDA,
-            'base': base,
-            'destino': destino,
-            'primer_dia': primer_dia,
-            'ultimo_dia': ultimo_dia,
-            'prestamos': [],
-            'prestamo_id': "",
-            'tc_hoy': None,
-            'pendientes_count': 0,
-            'vencidos_count': 0,
-            'pagados_mes_count': 0,
-            'filas': [],
-            'today': hoy,
-        }
-        return render(request, 'reportes/dashboard.html', ctx)
+    base = (persona.moneda_preferida or 'PEN').upper()
 
-    # Prestamos del usuario (OJO: PK = id_prestamo, no 'id')
-    prestamos_user = Prestamo.objects.filter(persona=persona).order_by('id_prestamo')
+    hoy = date.today()
+    primer_dia, ultimo_dia = _month_bounds(hoy)
 
-    # Pagos SOLO del usuario
-    pagos_qs = (
-        Pago.objects
-        .filter(prestamo__persona=persona)
-        .select_related('prestamo', 'prestamo__persona')
-    )
+    qs = (Pago.objects
+          .filter(prestamo__persona=persona, fecha_vencimiento__gte=primer_dia, fecha_vencimiento__lte=ultimo_dia)
+          .select_related('prestamo', 'prestamo__persona')
+          .order_by('fecha_vencimiento', 'numero_cuota'))
 
-    # Mes actual
-    pagos_mes = pagos_qs.filter(fecha_vencimiento__range=(primer_dia, ultimo_dia))
+    def conv(p):
+        origen = p.prestamo.moneda_prestamo or 'PEN'
+        return convertir_monto(p.monto, origen, base, p.fecha_vencimiento)
 
-    # Filtro por préstamo validando que sea del usuario
-    if prestamo_id and prestamo_id.isdigit():
-        pagos_qs = pagos_qs.filter(prestamo__id_prestamo=int(prestamo_id))
-        pagos_mes = pagos_mes.filter(prestamo__id_prestamo=int(prestamo_id))
+    total_pendientes = sum((conv(p) for p in qs.filter(estado='Pendiente')), Decimal('0.00'))
+    total_pagados_mes = sum((conv(p) for p in qs.filter(estado='Pagado')), Decimal('0.00'))
+    total_vencidos = sum((conv(p) for p in qs.filter(estado='Pendiente', fecha_vencimiento__lt=hoy)), Decimal('0.00'))
 
-    # === CONTADORES (CANTIDAD) ===
-    pendientes_count = pagos_qs.filter(estado='Pendiente').count()
-    vencidos_count = pagos_qs.filter(estado='Pendiente', fecha_vencimiento__lt=hoy).count()
-    pagados_mes_count = pagos_mes.filter(estado='Pagado').count()
-
-    # === Tabla del MES con conversión ===
-    filas = []
-    for p in pagos_mes.order_by('fecha_vencimiento', 'numero_cuota'):
-        try:
-            monto_base = convertir_monto(p.monto, base, base, p.fecha_vencimiento)
-            monto_destino = convertir_monto(p.monto, base, destino, p.fecha_vencimiento)
-        except Exception:
-            monto_base = p.monto
-            monto_destino = p.monto
-
-        filas.append({
-            'pago': p,
-            'monto_base': monto_base,
-            'monto_destino': monto_destino,
-        })
-
-    # Tipo de cambio del día
-    try:
-        tc_hoy = obtener_tipo_cambio(base, destino, hoy)
-    except Exception:
-        tc_hoy = None
+    filas = [{'pago': p, 'monto_base': conv(p), 'monto_destino': None} for p in qs]
 
     ctx = {
         'primer_dia': primer_dia,
         'ultimo_dia': ultimo_dia,
-        'PARES_MONEDA': PARES_MONEDA,
-        'base': base,
-        'destino': destino,
-
-        'prestamos': prestamos_user,
-        'prestamo_id': prestamo_id,  # string, se compara en el template
-
-        'tc_hoy': tc_hoy,
-
-        'pendientes_count': pendientes_count,
-        'vencidos_count': vencidos_count,
-        'pagados_mes_count': pagados_mes_count,
-
+        'total_pendientes': total_pendientes,
+        'total_pagados_mes': total_pagados_mes,
+        'total_vencidos': total_vencidos,
         'filas': filas,
-        'today': hoy,
+        'base': base,
+        'destino': base,  # ya no mostramos equivalente aquí
     }
     return render(request, 'reportes/dashboard.html', ctx)
+
+@login_required
+def agenda(request):
+    """Próximos 7 días (incluye hoy) y vencidos de días anteriores."""
+    persona = getattr(request.user, 'persona', None)
+    if not persona:
+        return render(request, 'reportes/agenda.html', {'items': []})
+
+    base = (persona.moneda_preferida or 'PEN').upper()
+    hoy = date.today()
+    fin = hoy + timedelta(days=7)
+
+    vencidos = (Pago.objects
+                .filter(prestamo__persona=persona, estado='Pendiente', fecha_vencimiento__lt=hoy)
+                .select_related('prestamo', 'prestamo__persona'))
+    proximos = (Pago.objects
+                .filter(prestamo__persona=persona, estado='Pendiente', fecha_vencimiento__gte=hoy, fecha_vencimiento__lte=fin)
+                .select_related('prestamo', 'prestamo__persona')
+                .order_by('fecha_vencimiento', 'numero_cuota'))
+
+    items = []
+    def _row(p):
+        origen = p.prestamo.moneda_prestamo or 'PEN'
+        monto = convertir_monto(p.monto, origen, base, p.fecha_vencimiento)
+        estado = 'Vencido' if p.fecha_vencimiento < hoy else ('Hoy' if p.fecha_vencimiento == hoy else 'Próximo')
+        return {'pago': p, 'monto': monto, 'estado': estado}
+
+    items.extend(_row(p) for p in vencidos)
+    items.extend(_row(p) for p in proximos)
+
+    return render(request, 'reportes/agenda.html', {'items': items, 'base': base, 'hoy': hoy})

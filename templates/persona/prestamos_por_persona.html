@@ -1,36 +1,36 @@
-{% extends 'base.html' %}
-{% block title %}Préstamos de {{ persona.nombres }}{% endblock %}
-{% block header %}
-  <h1>Préstamos de {{ persona.nombres }} {{ persona.apellidos }}</h1>
-  <a class="btn" href="{% url 'persona:lista' %}">← Volver a personas</a>
-{% endblock %}
+{% extends "base.html" %}
+
 {% block content %}
-  <div class="card">
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Banco</th>
-            <th>Monto total</th>
-            <th>Inicio</th>
-            <th>Cuotas</th>
-            <th>Pagos</th>
-          </tr>
-        </thead>
-        <tbody>
+<div class="container">
+  <h1 class="page-title">Préstamos de {{ persona.apellidos }}, {{ persona.nombres }}</h1>
+
+  <div class="card table-card">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Banco</th>
+          <th>Monto total</th>
+          <th>Cuotas</th>
+          <th>Inicio</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
         {% for pr in prestamos %}
           <tr>
             <td>{{ pr.banco }}</td>
             <td>{{ pr.monto_total }}</td>
-            <td>{{ pr.fecha_inicio }}</td>
             <td>{{ pr.cuotas_totales }}</td>
-            <td><a class="btn btn-primary" href="{% url 'prestamos:pagos' pr.id_prestamo %}">Ver pagos</a></td>
+            <td>{{ pr.fecha_inicio|date:"d/m/Y" }}</td>
+            <td class="table-actions">
+              <a class="btn btn-secondary" href="{% url 'prestamos:pagos_por_prestamo' pr.id_prestamo %}">Ver pagos</a>
+            </td>
           </tr>
         {% empty %}
           <tr><td colspan="5">Esta persona no tiene préstamos.</td></tr>
         {% endfor %}
-        </tbody>
-      </table>
-    </div>
+      </tbody>
+    </table>
   </div>
+</div>
 {% endblock %}

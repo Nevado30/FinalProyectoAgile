@@ -2,7 +2,16 @@
 
 {% block content %}
 <div class="container">
-  <h1 class="page-title">Nuevo préstamo</h1>
+  <h1 class="page-title">Editar préstamo</h1>
+
+  {% if tiene_pagados %}
+    <div class="alert alert-warning">
+      Este préstamo tiene pagos registrados. Se actualizarán datos generales;
+      <strong>no</strong> se recalcularán cuotas.
+    </div>
+  {% else %}
+    <div class="alert">Se recalcularán todas las cuotas al guardar.</div>
+  {% endif %}
 
   <form method="post" class="form-card">
     {% csrf_token %}
@@ -21,7 +30,6 @@
     <div class="form-group">
       <label for="{{ form.descripcion.id_for_label }}">Descripción</label>
       {{ form.descripcion }}
-      <div class="help">Ej: “Préstamo para carrito” (opcional)</div>
     </div>
 
     <div class="form-row">
@@ -52,7 +60,7 @@
 
     <div class="form-actions">
       <a href="{% url 'prestamos:lista' %}" class="btn btn-secondary">Cancelar</a>
-      <button type="submit" class="btn btn-primary">Guardar</button>
+      <button type="submit" class="btn btn-primary">Guardar cambios</button>
     </div>
   </form>
 </div>

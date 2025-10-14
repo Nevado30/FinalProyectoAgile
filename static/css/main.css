@@ -109,3 +109,8 @@ tr:hover td{ background:#0c142c; }
 .btn { padding: 8px 14px; border-radius: 10px; cursor: pointer; }
 .btn-primary { background:#5967ff; color:#fff; border:0; }
 .btn-secondary { background:#1b2636; color:#e6ecf1; border:1px solid #2a3a4f; }
+
+.page-header--with-actions{
+  display:flex; justify-content:space-between; align-items:center; gap:12px;
+}
+.page-header--with-actions .actions{ display:flex; gap:10px; }

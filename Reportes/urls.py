@@ -5,4 +5,5 @@ app_name = 'reportes'
 
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
+    path('agenda/', views.agenda, name='agenda'),
 ]

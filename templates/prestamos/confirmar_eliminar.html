@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+  <h1 class="page-title">Eliminar préstamo</h1>
+
+  {% if tiene_pagados %}
+    <div class="alert alert-error">
+      Este préstamo tiene pagos marcados como <strong>Pagado</strong>. Por seguridad no se permite eliminarlo.
+    </div>
+    <a href="{% url 'prestamos:lista' %}" class="btn btn-secondary">Volver</a>
+  {% else %}
+    <div class="alert">
+      ¿Seguro que deseas eliminar el préstamo en <strong>{{ prestamo.banco }}</strong>?
+      Se eliminarán todas sus cuotas.
+    </div>
+    <form method="post" class="form-actions">
+      {% csrf_token %}
+      <a href="{% url 'prestamos:lista' %}" class="btn btn-secondary">Cancelar</a>
+      <button type="submit" class="btn btn-danger">Eliminar</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

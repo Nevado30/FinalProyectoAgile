@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+  <h1 class="page-title">Agenda — próximos 7 días</h1>
+
+  <div class="card table-card">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Persona</th>
+          <th>Banco</th>
+          <th>Cuota</th>
+          <th>Monto ({{ base }})</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if items %}
+          {% for it in items %}
+            <tr>
+              <td>{{ it.pago.fecha_vencimiento|date:"d/m/Y" }}</td>
+              <td>{{ it.pago.prestamo.persona.apellidos }}, {{ it.pago.prestamo.persona.nombres }}</td>
+              <td>{{ it.pago.prestamo.banco }}</td>
+              <td>{{ it.pago.numero_cuota }}</td>
+              <td>{{ it.monto }}</td>
+              <td>
+                {% if it.estado == 'Vencido' %}
+                  <span class="badge danger">Vencido</span>
+                {% elif it.estado == 'Hoy' %}
+                  <span class="badge warning">Hoy</span>
+                {% else %}
+                  <span class="badge">Próximo</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="6">No hay pagos en la agenda.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
