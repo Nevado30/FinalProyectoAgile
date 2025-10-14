@@ -16,15 +16,52 @@ def _fila(pago, a_moneda):
 @login_required
 def lista_pagos(request):
     persona = getattr(request.user, 'persona', None)
-    base = (persona.moneda_preferida if persona and persona.moneda_preferida else 'PEN').upper()
+    if not persona:
+        return render(request, 'pagos/lista.html', {'filas': []})
 
-    qs = (Pago.objects
-          .filter(prestamo__persona__user=request.user)
-          .select_related('prestamo', 'prestamo__persona')
-          .order_by('fecha_vencimiento', 'numero_cuota'))
+    pagos = (Pago.objects
+             .filter(prestamo__persona=persona)
+             .select_related('prestamo', 'prestamo__persona')
+             .order_by('fecha_vencimiento', 'numero_cuota'))
 
-    filas = [_fila(p, base) for p in qs]
-    return render(request, 'pagos/lista_pagos.html', {'filas': filas, 'base': base})
+    filas = []
+    destino_global = (persona.moneda_preferida or 'PEN').upper()
+
+    # Si TODOS los préstamos usan la misma moneda de pago => úsala para header.
+    # Si cada préstamo define la suya, pondremos el header dinámico con un fallback al global.
+    destino_header = destino_global
+
+    show_equiv = False
+    for p in pagos:
+        origen = (p.prestamo.moneda_prestamo or 'PEN').upper()
+        destino = (getattr(p.prestamo, 'moneda_pago', None) or destino_global).upper()
+
+        if origen != destino:
+            show_equiv = True
+
+        try:
+            equiv = convertir_monto(p.monto, origen, destino, p.fecha_vencimiento) if origen != destino else None
+        except Exception:
+            equiv = None  # si falla la API, no rompas la vista
+
+        filas.append({
+            'pago': p,
+            'monto_base': p.monto,   # ya está en la moneda del préstamo
+            'equiv': equiv,          # Decimal o None
+            'origen': origen,
+            'destino': destino,
+        })
+
+        # Para el header, si alguna fila usa otra moneda destino, mantenemos el global
+        # (si prefieres, podrías detectar la más común).
+        destino_header = destino
+
+    ctx = {
+        'filas': filas,
+        'show_equiv': show_equiv,
+        'destino': destino_header,   # para el título "Equivalente ({{ destino }})"
+    }
+    return render(request, 'pagos/lista_pagos.html', ctx)
 
 @login_required
 def pagos_pendientes(request):

@@ -20,7 +20,9 @@ def email_step(request):
         email = (request.POST.get('email') or '').strip().lower()
         if not email:
             messages.error(request, 'Ingresa un correo válido.')
-            return redirect('seguridad:email')
+            # Volvemos a pintar la pantalla con la barra oculta
+            return render(request, 'seguridad/email_step.html', {'hide_navbar': True})
+
         try:
             send_verification_code(email)
             request.session['pending_email'] = email
@@ -28,8 +30,10 @@ def email_step(request):
             return redirect('seguridad:verify')
         except Exception as e:
             messages.error(request, f'No se pudo enviar el código: {e}')
-            return redirect('seguridad:email')
-    return render(request, 'seguridad/email_step.html')
+            return render(request, 'seguridad/email_step.html', {'hide_navbar': True})
+
+    # GET
+    return render(request, 'seguridad/email_step.html', {'hide_navbar': True})
 
 
 def verify_step(request):
@@ -46,14 +50,15 @@ def verify_step(request):
             ok, err = False, 'No se pudo validar el código. Intenta nuevamente.'
         if not ok:
             messages.error(request, err or 'Código inválido o expirado.')
-            return redirect('seguridad:verify')
+            return render(request, 'seguridad/verify_step.html', {'email': email, 'hide_navbar': True})
 
         user, _ = User.objects.get_or_create(username=email, defaults={'email': email})
         user.backend = 'django.contrib.auth.backends.ModelBackend'
         login(request, user)
         return redirect('seguridad:profile')
 
-    return render(request, 'seguridad/verify_step.html', {'email': email})
+    # GET
+    return render(request, 'seguridad/verify_step.html', {'email': email, 'hide_navbar': True})
 
 
 def resend_code(request):
@@ -72,8 +77,10 @@ def resend_code(request):
 @login_required
 def profile_step(request):
     """
-    Muestra y guarda los datos de la Persona asociada al usuario.
-    Precarga campos y valida confirmación de contraseña.
+    Registro/actualización de datos de Persona.
+    - Requiere SIEMPRE: nombres, apellidos, direccion y contraseña+confirmación.
+    - Teléfono: opcional.
+    - La contraseña se actualiza (puede ser la misma que ya usa).
     """
     persona = getattr(request.user, 'persona', None)
 
@@ -85,14 +92,33 @@ def profile_step(request):
         password  = (request.POST.get('password') or '').strip()
         confirm   = (request.POST.get('confirm_password') or '').strip()
 
-        if not nombres or not apellidos:
-            messages.error(request, 'Completa nombres y apellidos.')
-            return redirect('seguridad:profile')
+        # Obligatorios
+        if not nombres:
+            messages.error(request, 'Debes ingresar tus nombres.')
+            return render(request, 'seguridad/profile_step.html',
+                          {'persona': persona, 'hide_navbar': True})
+        if not apellidos:
+            messages.error(request, 'Debes ingresar tus apellidos.')
+            return render(request, 'seguridad/profile_step.html',
+                          {'persona': persona, 'hide_navbar': True})
+        if not direccion:
+            messages.error(request, 'Debes ingresar tu dirección.')
+            return render(request, 'seguridad/profile_step.html',
+                          {'persona': persona, 'hide_navbar': True})
 
-        if password or confirm:
-            if password != confirm:
-                messages.error(request, 'Las contraseñas no coinciden.')
-                return redirect('seguridad:profile')
+        # Contraseña SIEMPRE obligatoria
+        if not password or not confirm:
+            messages.error(request, 'Debes ingresar y confirmar tu contraseña.')
+            return render(request, 'seguridad/profile_step.html',
+                          {'persona': persona, 'hide_navbar': True})
+        if password != confirm:
+            messages.error(request, 'Las contraseñas no coinciden.')
+            return render(request, 'seguridad/profile_step.html',
+                          {'persona': persona, 'hide_navbar': True})
+        if len(password) < 6:
+            messages.error(request, 'La contraseña debe tener al menos 6 caracteres.')
+            return render(request, 'seguridad/profile_step.html',
+                          {'persona': persona, 'hide_navbar': True})
 
         # Crear/actualizar Persona
         if persona is None:
@@ -102,31 +128,32 @@ def profile_step(request):
                 apellidos=apellidos,
                 correo=request.user.email or request.user.username,
                 telefono=telefono or None,
-                direccion=direccion or None,
+                direccion=direccion,
             )
         else:
             persona.nombres = nombres
             persona.apellidos = apellidos
             persona.correo = request.user.email or request.user.username
             persona.telefono = telefono or None
-            persona.direccion = direccion or None
+            persona.direccion = direccion
             persona.save()
 
-        # Cambiar contraseña (opcional)
-        if password:
-            request.user.set_password(password)
-            request.user.save()
-            user = authenticate(username=request.user.username, password=password)
-            if user:
-                login(request, user)
+        # Actualizar SIEMPRE la contraseña (puede ser la misma)
+        request.user.set_password(password)
+        request.user.save()
+        # Reautenticar
+        user = authenticate(username=request.user.username, password=password)
+        if user:
+            login(request, user)
 
-        messages.success(request, 'Perfil actualizado.')
+        messages.success(request, 'Perfil actualizado correctamente.')
         return redirect('reportes:dashboard')
 
-    # GET: precarga
+    # GET
     ctx = {
         'persona': persona,
         'email_verificado': request.user.email or request.user.username,
+        'hide_navbar': True,   # seguimos ocultando barra en esta pantalla
     }
     return render(request, 'seguridad/profile_step.html', ctx)
 
@@ -154,9 +181,11 @@ def login_view(request):
             return redirect(next_url)
 
         messages.error(request, 'Credenciales inválidas.')
-        return redirect('seguridad:login')
+        # Repintamos el login con navbar oculto
+        return render(request, 'seguridad/login.html', {'hide_navbar': True})
 
-    return render(request, 'seguridad/login.html')
+    # GET
+    return render(request, 'seguridad/login.html', {'hide_navbar': True})
 
 
 @login_required
@@ -183,4 +212,5 @@ def notification_settings(request):
     else:
         form = NotificacionForm(instance=persona)
 
+    # Aquí SÍ mostramos la navbar (no pasamos hide_navbar)
     return render(request, 'seguridad/notificaciones.html', {'form': form})

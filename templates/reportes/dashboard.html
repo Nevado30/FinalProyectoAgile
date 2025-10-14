@@ -3,16 +3,30 @@
 
 {% block content %}
 <div class="container">
-  <h1 class="page-title">Dashboard de Reportes</h1>
-  <p class="page-subtitle">
-    Mes actual:
-    {{ primer_dia|date:"j \\d\\e F \\d\\e Y" }}
-    —
-    {{ ultimo_dia|date:"j \\d\\e F \\d\\e Y" }}
+
+  <div class="toolbar">
+    <div class="group">
+      <a class="btn btn-light" href="?mes={{ prev_ym }}">← Mes anterior</a>
+    </div>
+
+    <form class="group month-form" method="get" autocomplete="off">
+      <label for="month" class="label">Mes</label>
+      <input id="month" name="mes" type="month" class="input-month" value="{{ mes_str }}">
+      <button class="btn btn-primary btn-icon" type="submit" aria-label="Ir">Ir</button>
+      <a class="btn btn-ghost" href="?mes={{ today_ym }}">Hoy</a>
+    </form>
+
+    <div class="group">
+      <a class="btn btn-light" href="?mes={{ next_ym }}">Mes siguiente →</a>
+    </div>
+  </div>
+
+  <p class="period-chip">
+    {{ primer_dia|date:"j \\d\\e F \\d\\e Y" }} — {{ ultimo_dia|date:"j \\d\\e F \\d\\e Y" }}
   </p>
 
-  <div class="cards">
-    <div class="card">
+  <div class="cards cards-3">
+    <div class="card emphasize">
       <div class="card-title">Este mes debes pagar</div>
       <div class="metric">{{ total_pendientes }}</div>
       <div class="muted">en {{ base }}</div>
@@ -20,23 +34,25 @@
     <div class="card">
       <div class="card-title">Pagado en el mes</div>
       <div class="metric">{{ total_pagados_mes }}</div>
+      <div class="muted">en {{ base }}</div>
     </div>
     <div class="card">
       <div class="card-title">Vencidos del mes</div>
       <div class="metric">{{ total_vencidos }}</div>
+      <div class="muted">en {{ base }}</div>
     </div>
   </div>
 
   <div class="card table-card">
-    <table class="table">
-      <thead>
+    <table class="table table-zebra">
+      <thead class="sticky">
         <tr>
           <th>Persona</th>
           <th>Banco</th>
           <th>Cuota</th>
           <th>Vence</th>
-          <th>Monto ({{ base }})</th>
-          <th>Equivalente ({{ destino }})</th>
+          <th class="right">Monto ({{ base }})</th>
+          {% if show_equiv %}<th class="right">Equivalente ({{ destino }})</th>{% endif %}
           <th>Estado</th>
         </tr>
       </thead>
@@ -47,15 +63,31 @@
             <td>{{ f.pago.prestamo.banco }}</td>
             <td>{{ f.pago.numero_cuota }}</td>
             <td>{{ f.pago.fecha_vencimiento|date:"d/m/Y" }}</td>
-            <td>{{ f.monto_base }}</td>
-            <td>{{ f.monto_destino }}</td>
-            <td>{{ f.pago.estado }}</td>
+            <td class="right">{{ f.monto_base }}</td>
+            {% if show_equiv %}<td class="right">{{ f.monto_destino }}</td>{% endif %}
+            <td>
+              {% if f.pago.estado == 'Pagado' %}
+                <span class="badge success">Pagado</span>
+              {% elif f.pago.fecha_vencimiento < today and f.pago.estado == 'Pendiente' %}
+                <span class="badge danger">Vencido</span>
+              {% else %}
+                <span class="badge">Pendiente</span>
+              {% endif %}
+            </td>
           </tr>
         {% empty %}
-          <tr><td colspan="7">No hay pagos en este mes.</td></tr>
+          <tr>
+            <td colspan="{% if show_equiv %}7{% else %}6{% endif %}">
+              <div class="empty">
+                <div class="empty-title">No hay pagos en este mes.</div>
+                <div class="empty-desc">Elige otro mes o registra un nuevo préstamo.</div>
+              </div>
+            </td>
+          </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
+
 {% endblock %}

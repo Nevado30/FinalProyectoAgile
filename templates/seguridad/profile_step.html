@@ -4,19 +4,19 @@
 <div class="container">
   <h1 class="page-title">Registro de datos</h1>
 
-  <p class="page-subtitle">Correo verificado: <strong>{{ email_verificado }}</strong></p>
+  <p class="page-subtitle">Correo verificado: <strong>{{ request.user.email|default:request.user.username }}</strong></p>
 
   <form method="post" class="form-card">
     {% csrf_token %}
 
     <div class="form-row">
       <div class="form-group">
-        <label for="id_nombres">Nombres</label>
+        <label for="id_nombres">Nombres <span class="req">*</span></label>
         <input id="id_nombres" name="nombres" type="text" class="input" required
                value="{{ persona.nombres|default:'' }}">
       </div>
       <div class="form-group">
-        <label for="id_apellidos">Apellidos</label>
+        <label for="id_apellidos">Apellidos <span class="req">*</span></label>
         <input id="id_apellidos" name="apellidos" type="text" class="input" required
                value="{{ persona.apellidos|default:'' }}">
       </div>
@@ -24,30 +24,31 @@
 
     <div class="form-row">
       <div class="form-group">
-        <label for="id_telefono">Teléfono</label>
+        <label for="id_telefono">Teléfono (opcional)</label>
         <input id="id_telefono" name="telefono" type="text" class="input"
                value="{{ persona.telefono|default:'' }}">
       </div>
       <div class="form-group">
-        <label for="id_direccion">Dirección</label>
-        <input id="id_direccion" name="direccion" type="text" class="input"
+        <label for="id_direccion">Dirección <span class="req">*</span></label>
+        <input id="id_direccion" name="direccion" type="text" class="input" required
                value="{{ persona.direccion|default:'' }}">
       </div>
     </div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label for="id_password">Contraseña</label>
-        <input id="id_password" name="password" type="password" class="input" placeholder="Opcional">
-      </div>
-      <div class="form-group">
-        <label for="id_confirm">Confirmar contraseña</label>
-        <input id="id_confirm" name="confirm_password" type="password" class="input" placeholder="Opcional">
-      </div>
-    </div>
+   <div class="form-row">
+  <div class="form-group">
+    <label for="id_password">Contraseña (obligatoria)</label>
+    <input id="id_password" name="password" type="password" class="input" required>
+  </div>
+  <div class="form-group">
+    <label for="id_confirm">Confirmar contraseña (obligatoria)</label>
+    <input id="id_confirm" name="confirm_password" type="password" class="input" required>
+  </div>
+</div>
+
 
     <div class="form-actions">
-      <a class="btn btn-secondary" href="{% url 'reportes:dashboard' %}">Cancelar</a>
+      <a class="btn btn-secondary" href="{% url 'seguridad:login' %}">Cancelar</a>
       <button class="btn btn-primary" type="submit">Continuar</button>
     </div>
   </form>

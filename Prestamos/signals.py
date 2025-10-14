@@ -16,7 +16,7 @@ def _round2(x: Decimal) -> Decimal:
 
 def _i_mensual_desde_tea(tea_percent: Decimal) -> Decimal:
     """
-    Convierte TEA (porcentaje) a tasa mensual equivalente.
+    Convierte TEA (porcentaje) a tasa mensual equivalente (efectiva):
     i = (1 + TEA)^(1/12) - 1
     """
     tea = _to_dec(tea_percent or 0) / Decimal('100')
@@ -32,6 +32,8 @@ def generar_cuotas(prestamo: Prestamo):
       - Sistema francés cuando tasa_interes > 0 (cuota fija).
       - Prorrateo simple cuando tasa_interes == 0.
     Guarda en Pago.monto la cuota del mes (capital+interés).
+
+    Primera cuota: fecha_inicio + 1 mes (luego +2, +3, ...).
     """
     # evitar duplicados
     if Pago.objects.filter(prestamo=prestamo).exists():
@@ -75,16 +77,15 @@ def generar_cuotas(prestamo: Prestamo):
             else:
                 monto = cuota
                 sum_asignado += monto
-                # capital = cuota - interes (no lo guardamos, solo para saldo)
             capital = _round2(monto - interes)
             saldo = _round2(saldo - capital)
             if saldo < 0:
                 saldo = Decimal('0.00')
             montos.append(monto)
 
-    # Crear pagos
+    # Crear pagos (1ª cuota = fecha_inicio + 1 mes)
     for idx, monto in enumerate(montos, start=1):
-        fecha_venc = add_months(prestamo.fecha_inicio, idx - 1)
+        fecha_venc = add_months(prestamo.fecha_inicio, idx)
         Pago.objects.create(
             prestamo=prestamo,
             numero_cuota=idx,

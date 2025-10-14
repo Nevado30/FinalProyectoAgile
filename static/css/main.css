@@ -114,3 +114,67 @@ tr:hover td{ background:#0c142c; }
   display:flex; justify-content:space-between; align-items:center; gap:12px;
 }
 .page-header--with-actions .actions{ display:flex; gap:10px; }
+
+/* ===== Toolbar de navegación de mes ===== */
+.toolbar{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:1rem; margin-bottom:1rem;
+  flex-wrap:wrap;
+}
+.toolbar .group{ display:flex; align-items:center; gap:.5rem; }
+
+.label{ font-size:.875rem; color:#9aa4b2; margin-right:.25rem; }
+
+.input-month{
+  appearance:none; -webkit-appearance:none;
+  background:#0f1624; border:1px solid #1f2a44; color:#e7ecf3;
+  padding:.55rem .7rem; border-radius:.6rem;
+}
+.input-month:focus{ outline:none; border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.2); }
+
+.period-chip{
+  opacity:.85; margin:.3rem 0 1rem; font-size:.95rem;
+}
+
+/* ===== Botones ===== */
+.btn{ display:inline-flex; align-items:center; gap:.5rem;
+  padding:.55rem .85rem; font-weight:600; border-radius:.7rem; border:1px solid transparent;
+  background:#1a2236; color:#e7ecf3; text-decoration:none;
+}
+.btn:hover{ filter:brightness(1.08); }
+.btn:active{ transform:translateY(1px); }
+
+.btn-light{ background:#0f1624; border-color:#24304a; }
+.btn-primary{ background:#5865f2; }
+.btn-ghost{ background:transparent; border-color:#24304a; }
+
+.btn-icon{ padding:.55rem .75rem; }
+
+/* ===== Cards ===== */
+.cards{ display:grid; gap:1rem; }
+.cards-3{ grid-template-columns: repeat(1,1fr); }
+@media (min-width: 900px){ .cards-3{ grid-template-columns: repeat(3,1fr); } }
+
+.card.emphasize{ border:1px solid #3b82f633; box-shadow:0 6px 20px rgba(59,130,246,.08) inset; }
+
+/* ===== Tabla ===== */
+.table-card{ overflow:auto; }
+.table{ width:100%; border-collapse:separate; border-spacing:0; }
+.table thead th{
+  text-align:left; font-weight:700; font-size:.9rem; color:#9aa4b2; padding:.8rem .9rem;
+  border-bottom:1px solid #26324b; background:#0d1421;
+}
+.table td{ padding:.8rem .9rem; border-bottom:1px solid #202a43; }
+.table .right{ text-align:right; }
+.table-zebra tbody tr:nth-child(odd){ background:#0e1626; }
+.table thead.sticky{ position:sticky; top:0; z-index:5; }
+
+/* ===== Empty state ===== */
+.empty{ padding:1rem; text-align:center; color:#9aa4b2; }
+.empty-title{ font-weight:700; color:#cdd7e6; }
+
+/* ===== Badges ===== */
+.badge{ padding:.25rem .6rem; border-radius:999px; background:#22314e; font-size:.75rem; }
+.badge.success{ background:#1e3a2f; color:#9ae6b4; }
+.badge.danger{ background:#3d1b1b; color:#feb2b2; }
+.badge.warning{ background:#3a2b12; color:#fcd34d; }

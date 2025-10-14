@@ -1,23 +1,25 @@
 {% extends "base.html" %}
+{% block title %}Pagos — Vencidos{% endblock %}
 
 {% block content %}
 <div class="container">
   <h1 class="page-title">Pagos vencidos</h1>
+
   <div class="toolbar">
-    <a class="btn btn-secondary" href="{% url 'pagos:lista_pagos' %}">Ver todos</a>
     <a class="btn btn-secondary" href="{% url 'pagos:pendientes' %}">Ver pendientes</a>
+    <a class="btn btn-secondary" href="{% url 'pagos:lista_pagos' %}">Ver todos</a>
   </div>
 
   <div class="card table-card">
-    <table class="table">
+    <table class="table table-zebra">
       <thead>
         <tr>
           <th>Persona</th>
           <th>Banco</th>
           <th>Cuota</th>
           <th>Vence</th>
-          <th>Monto ({{ base }})</th>
-          <th>Equivalente ({{ destino }})</th>
+          <th class="right">Monto ({{ base }})</th>
+          <th>Estado</th>
           <th>Acción</th>
         </tr>
       </thead>
@@ -29,8 +31,8 @@
               <td>{{ f.pago.prestamo.banco }}</td>
               <td>{{ f.pago.numero_cuota }}</td>
               <td>{{ f.pago.fecha_vencimiento|date:"d/m/Y" }}</td>
-              <td>{{ f.monto_base }}</td>
-              <td>{{ f.monto_destino }}</td>
+              <td class="right">{{ f.monto_base }}</td>
+              <td>{{ f.pago.estado }}</td>
               <td>
                 <form method="post" action="{% url 'pagos:marcar_pagado' f.pago.id_pago %}">
                   {% csrf_token %}
@@ -40,7 +42,14 @@
             </tr>
           {% endfor %}
         {% else %}
-          <tr><td colspan="7">No hay pagos vencidos.</td></tr>
+          <tr>
+            <td colspan="7">
+              <div class="empty">
+                <div class="empty-title">No hay pagos vencidos.</div>
+                <div class="empty-desc">¡Excelente!</div>
+              </div>
+            </td>
+          </tr>
         {% endif %}
       </tbody>
     </table>
