@@ -6,11 +6,8 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-reemplaza-esto-en-produccion')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',') if h.strip()]
-SITE_DOMAIN = os.getenv('SITE_DOMAIN')  # p.ej. tuapp.koyeb.app
-if SITE_DOMAIN:
-    ALLOWED_HOSTS.append(SITE_DOMAIN)
-    CSRF_TRUSTED_ORIGINS = [f"https://{SITE_DOMAIN}"]
+ALLOWED_HOSTS = []
+
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Application definition
@@ -35,7 +32,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
