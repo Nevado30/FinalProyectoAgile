@@ -1,12 +1,14 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-
+from Moneda.services import convertir_monto
 from .models import Prestamo
 from .forms import PrestamoForm
 from Pagos.models import Pago
 from .signals import generar_cuotas
-
+from datetime import date
+from decimal import Decimal, ROUND_HALF_UP
+from django.urls import reverse
 
 @login_required
 def lista_prestamos(request):
@@ -19,14 +21,59 @@ def lista_prestamos(request):
     return render(request, 'prestamos/lista_prestamos.html', {'prestamos': prestamos})
 
 
+def _q2(x) -> Decimal:
+    try:
+        d = Decimal(str(x))
+    except Exception:
+        d = Decimal(x)
+    return d.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+def _sym(mon: str) -> str:
+    m = (mon or 'PEN').upper()
+    return {'PEN': 'S/', 'USD': '$/', 'EUR': '€/'}.get(m, m + '/')
+
 @login_required
 def pagos_por_prestamo(request, prestamo_id: int):
     prestamo = get_object_or_404(Prestamo, pk=prestamo_id, persona__user=request.user)
+    origen = (prestamo.moneda_prestamo or 'PEN').upper()
+    preferida = (getattr(request.user.persona, 'moneda_preferida', None) or 'PEN').upper()
+    destino = (getattr(prestamo, 'moneda_pago', None) or preferida).upper()
+
     pagos = Pago.objects.filter(prestamo=prestamo).order_by('numero_cuota')
-    return render(request, 'prestamos/pagos_por_prestamo.html', {
+
+    filas = []
+    for p in pagos:
+        monto = _q2(p.monto)
+        equiv = None
+
+        if origen != destino:
+            try:
+                # Si está pagado y tienes montos fijos guardados, úsalos.
+                if p.estado == 'Pagado' and hasattr(p, 'monto_destino_fijo') and p.monto_destino_fijo:
+                    equiv = _q2(p.monto_destino_fijo)
+                else:
+                    fecha_ref = p.fecha_pago.date() if (p.estado == 'Pagado' and p.fecha_pago) else p.fecha_vencimiento
+                    equiv = _q2(convertir_monto(p.monto, origen, destino, fecha_ref))
+            except Exception:
+                equiv = None
+
+        filas.append({
+            'pago': p,
+            'monto_base': monto,
+            'equiv': equiv,
+            'sym_origen': _sym(origen),
+            'sym_destino': _sym(destino),
+        })
+    back_url = request.GET.get('next') or reverse('prestamos:lista')
+    ctx = {
         'prestamo': prestamo,
-        'pagos': pagos,
-    })
+        'filas': filas,
+        'today': date.today(),
+        'sym_origen': _sym(origen),
+        'sym_destino': _sym(destino),
+        'back_url': back_url,
+    }
+    return render(request, 'prestamos/pagos_por_prestamo.html', ctx)
 
 
 @login_required

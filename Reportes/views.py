@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 import calendar
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
@@ -9,9 +9,14 @@ from Pagos.models import Pago
 from Moneda.services import convertir_monto
 
 
-# =========================
-# Helpers de navegación de mes
-# =========================
+def _q2(x) -> Decimal:
+    """Redondea a 2 decimales con HALF_UP (estilo financiero)."""
+    try:
+        d = Decimal(str(x))
+    except Exception:
+        d = Decimal(x)
+    return d.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
 def _inicio_mes(d: date) -> date:
     return d.replace(day=1)
 
@@ -81,14 +86,11 @@ def dashboard(request):
 
     def conv(p):
         origen = p.prestamo.moneda_prestamo or 'PEN'
-        return convertir_monto(p.monto, origen, base, p.fecha_vencimiento)
+        return _q2(convertir_monto(p.monto, origen, base, p.fecha_vencimiento))
 
     total_pendientes = sum((conv(p) for p in qs.filter(estado='Pendiente')), Decimal('0.00'))
     total_pagados_mes = sum((conv(p) for p in qs.filter(estado='Pagado')), Decimal('0.00'))
-    total_vencidos = sum(
-        (conv(p) for p in qs.filter(estado='Pendiente', fecha_vencimiento__lt=today)),
-        Decimal('0.00')
-    )
+    total_vencidos = sum((conv(p) for p in qs.filter(estado='Pendiente', fecha_vencimiento__lt=today)), Decimal('0.00'))
 
     filas = [{'pago': p, 'monto_base': conv(p), 'monto_destino': None} for p in qs]
 

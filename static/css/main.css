@@ -178,3 +178,49 @@ tr:hover td{ background:#0c142c; }
 .badge.success{ background:#1e3a2f; color:#9ae6b4; }
 .badge.danger{ background:#3d1b1b; color:#feb2b2; }
 .badge.warning{ background:#3a2b12; color:#fcd34d; }
+
+.table.centered th,
+.table.centered td { text-align: center; }
+
+.table.centered th.left,
+.table.centered td.left { text-align: left; }
+
+.table.centered th.right,
+.table.centered td.right { text-align: right; }
+
+.kpi-row{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.card.kpi{
+  padding: 18px 20px;
+  border-radius: 12px;
+  background: var(--surface-2, #131a24);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.04) inset;
+}
+
+.card.kpi .card-title{
+  font-size: .95rem;
+  opacity:.9;
+  margin-bottom: 6px;
+}
+
+.card.kpi .metric{
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.card.kpi .muted{
+  font-size: .85rem;
+  opacity:.7;
+  margin-top: 2px;
+}
+
+/* En móviles se apilan */
+@media (max-width: 900px){
+  .kpi-row{ grid-template-columns: 1fr; }
+}

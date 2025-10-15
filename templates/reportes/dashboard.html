@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load l10n %}
 {% block title %}Reportes{% endblock %}
 
 {% block content %}
@@ -25,30 +26,33 @@
     {{ primer_dia|date:"j \\d\\e F \\d\\e Y" }} — {{ ultimo_dia|date:"j \\d\\e F \\d\\e Y" }}
   </p>
 
-  <div class="cards cards-3">
-    <div class="card emphasize">
-      <div class="card-title">Este mes debes pagar</div>
-      <div class="metric">{{ total_pendientes }}</div>
-      <div class="muted">en {{ base }}</div>
-    </div>
-    <div class="card">
-      <div class="card-title">Pagado en el mes</div>
-      <div class="metric">{{ total_pagados_mes }}</div>
-      <div class="muted">en {{ base }}</div>
-    </div>
-    <div class="card">
-      <div class="card-title">Vencidos del mes</div>
-      <div class="metric">{{ total_vencidos }}</div>
-      <div class="muted">en {{ base }}</div>
-    </div>
+  <div class="kpi-row">
+  <div class="card kpi">
+    <div class="card-title">Este mes debes pagar</div>
+    <div class="metric">{{ total_pendientes|floatformat:2|localize }}</div>
+    <div class="muted">en {{ base }}</div>
   </div>
+
+  <div class="card kpi">
+    <div class="card-title">Pagado en el mes</div>
+    <div class="metric">{{ total_pagados_mes|floatformat:2|localize }}</div>
+    <div class="muted">en {{ base }}</div>
+  </div>
+
+  <div class="card kpi">
+    <div class="card-title">Vencidos del mes</div>
+    <div class="metric">{{ total_vencidos|floatformat:2|localize }}</div>
+    <div class="muted">en {{ base }}</div>
+  </div>
+</div>
+
 
   <div class="card table-card">
     <table class="table table-zebra">
       <thead class="sticky">
         <tr>
           <th>Persona</th>
-          <th>Banco</th>
+          <th>Entidad</th>
           <th>Cuota</th>
           <th>Vence</th>
           <th class="right">Monto ({{ base }})</th>
@@ -63,7 +67,7 @@
             <td>{{ f.pago.prestamo.banco }}</td>
             <td>{{ f.pago.numero_cuota }}</td>
             <td>{{ f.pago.fecha_vencimiento|date:"d/m/Y" }}</td>
-            <td class="right">{{ f.monto_base }}</td>
+            <td class="right">{{ f.monto_base|floatformat:2|localize }}</td>
             {% if show_equiv %}<td class="right">{{ f.monto_destino }}</td>{% endif %}
             <td>
               {% if f.pago.estado == 'Pagado' %}

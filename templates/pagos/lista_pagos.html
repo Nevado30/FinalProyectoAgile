@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load l10n %}
 {% block title %}Pagos — Todos{% endblock %}
 
 {% block content %}
@@ -11,68 +12,83 @@
   </div>
 
   <div class="card table-card">
-    <table class="table table-zebra">
-      <thead>
-        <tr>
-          <th>Persona</th>
-          <th>Banco</th>
-          <th>Cuota</th>
-          <th>Vence</th>
-          <th class="right">
-            Monto ({% if filas %}{{ filas.0.origen }}{% else %}—{% endif %})
-          </th>
-          {% if show_equiv %}
-            <th class="right">
-              Equivalente{% if destino %} ({{ destino }}){% endif %}
-            </th>
+    <table class="table table-zebra centered">
+  <thead>
+    <tr>
+      <th class="left">Persona</th>
+      <th class="left">Entidad</th>
+      <th>Cuota</th>
+      <th>Vence</th>
+      <th class="right">Monto</th>
+      <th class="right">Equivalente</th>
+      <th>Estado</th>
+      <th>Acción</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for f in filas %}
+      <tr>
+        <td class="left">{{ f.pago.prestamo.persona.apellidos }}, {{ f.pago.prestamo.persona.nombres }}</td>
+        <td class="left">{{ f.pago.prestamo.banco }}</td>
+        <td>{{ f.pago.numero_cuota }}</td>
+        <td>{{ f.pago.fecha_vencimiento|date:"d/m/Y" }}</td>
+        <td class="right">{{ f.sym_origen }}{{ f.monto_base|floatformat:2|localize }}</td>
+        <td class="right">
+          {% if f.equiv is not None %}
+            {{ f.sym_destino }}{{ f.equiv|floatformat:2|localize }}
+          {% else %}—{% endif %}
+        </td>
+        <td>
+          {% if f.pago.estado == 'Pagado' %}
+            <span class="badge success">Pagado</span>
+          {% else %}
+            <span class="badge">Pendiente</span>
           {% endif %}
-          <th>Estado</th>
-          <th>Acción</th>
-        </tr>
-      </thead>
+        </td>
+        <td>
+          {% if f.pago.estado != 'Pagado' %}
+            <form method="post" action="{% url 'pagos:marcar_pagado' f.pago.id_pago %}">
+              {% csrf_token %}
+              <button class="btn btn-primary" type="submit">Marcar pagado</button>
+            </form>
+          {% else %}—{% endif %}
+        </td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="8">
+          <div class="empty">
+            <div class="empty-title">No hay pagos registrados.</div>
+            <div class="empty-desc">Crea un préstamo o cambia de vista.</div>
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
 
-      <tbody>
-        {% if filas %}
-          {% for f in filas %}
-            <tr>
-              <td>{{ f.pago.prestamo.persona.apellidos }}, {{ f.pago.prestamo.persona.nombres }}</td>
-              <td>{{ f.pago.prestamo.banco }}</td>
-              <td>{{ f.pago.numero_cuota }}</td>
-              <td>{{ f.pago.fecha_vencimiento|date:"d/m/Y" }}</td>
-
-              <td class="right">{{ f.monto_base }}</td>
-
-              {% if show_equiv %}
-                <td class="right">
-                  {% if f.equiv is not None %}{{ f.equiv }}{% else %}—{% endif %}
-                </td>
-              {% endif %}
-
-              <td>{{ f.pago.estado }}</td>
-              <td>
-                {% if f.pago.estado != 'Pagado' %}
-                  <form method="post" action="{% url 'pagos:marcar_pagado' f.pago.id_pago %}">
-                    {% csrf_token %}
-                    <button class="btn btn-primary" type="submit">Marcar pagado</button>
-                  </form>
-                {% else %}
-                  —
-                {% endif %}
-              </td>
-            </tr>
-          {% endfor %}
-        {% else %}
-          <tr>
-            <td colspan="{% if show_equiv %}8{% else %}7{% endif %}">
-              <div class="empty">
-                <div class="empty-title">No hay pagos registrados.</div>
-                <div class="empty-desc">Crea un préstamo o cambia de vista.</div>
-              </div>
-            </td>
-          </tr>
-        {% endif %}
-      </tbody>
-    </table>
   </div>
+
+  {% if page_obj and page_obj.paginator.num_pages > 1 %}
+  <div class="toolbar" style="justify-content:center; gap:.5rem;">
+    {% if page_obj.has_previous %}
+      <a class="btn btn-light" href="?page=1">« Primero</a>
+      <a class="btn btn-light" href="?page={{ page_obj.previous_page_number }}">‹ Anterior</a>
+    {% else %}
+      <span class="btn btn-light" style="opacity:.5; pointer-events:none;">« Primero</span>
+      <span class="btn btn-light" style="opacity:.5; pointer-events:none;">‹ Anterior</span>
+    {% endif %}
+
+    <span class="muted">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+      <a class="btn btn-light" href="?page={{ page_obj.next_page_number }}">Siguiente ›</a>
+      <a class="btn btn-light" href="?page={{ page_obj.paginator.num_pages }}">Último »</a>
+    {% else %}
+      <span class="btn btn-light" style="opacity:.5; pointer-events:none;">Siguiente ›</span>
+      <span class="btn btn-light" style="opacity:.5; pointer-events:none;">Último »</span>
+    {% endif %}
+  </div>
+  {% endif %}
 </div>
 {% endblock %}
