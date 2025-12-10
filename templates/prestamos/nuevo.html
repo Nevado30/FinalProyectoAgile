@@ -1,59 +1,82 @@
 {% extends "base.html" %}
+{% load l10n %}
+
+{% block title %}Nuevo préstamo{% endblock %}
 
 {% block content %}
 <div class="container">
+
   <h1 class="page-title">Nuevo préstamo</h1>
 
   <form method="post" class="form-card">
     {% csrf_token %}
 
+    <!-- Fila 1: Acreedor + banco/etiqueta -->
     <div class="form-row">
       <div class="form-group">
         <label for="{{ form.acreedor.id_for_label }}">Acreedor / Entidad</label>
         {{ form.acreedor }}
         <div class="help">
           Escoge a quién le debes.
-          <a href="{% url 'prestamos:acreedor_nuevo' %}" target="_blank">
+          <a href="{% url 'prestamos:acreedor_nuevo' %}" class="link-inline">
             Crear nuevo acreedor
           </a>
         </div>
       </div>
+
       <div class="form-group">
         <label for="{{ form.banco.id_for_label }}">Banco / etiqueta corta</label>
         {{ form.banco }}
+        <div class="help">
+          Nombre corto que verás en las listas (ej: “BCP tarjeta crédito”, “Nevado”, “Papá”).
+        </div>
       </div>
+    </div>
+
+    <!-- Descripción -->
+    <div class="form-group">
+      <label for="{{ form.descripcion.id_for_label }}">Descripción</label>
+      {{ form.descripcion }}
+      <div class="help">Ej: “Préstamo para carrito” (opcional).</div>
+    </div>
+
+    <!-- Fila 2: monto total -->
+    <div class="form-row">
       <div class="form-group">
         <label for="{{ form.monto_total.id_for_label }}">Monto total</label>
         {{ form.monto_total }}
       </div>
+
+      <div class="form-group">
+        <!-- lo dejamos vacío para mantener la grilla limpia -->
+      </div>
     </div>
 
-    <div class="form-group">
-      <label for="{{ form.descripcion.id_for_label }}">Descripción</label>
-      {{ form.descripcion }}
-      <div class="help">Ej: “Préstamo para carrito” (opcional)</div>
-    </div>
-
+    <!-- Fila 3: tasa, fecha inicio, cuotas -->
     <div class="form-row">
       <div class="form-group">
         <label for="{{ form.tasa_interes.id_for_label }}">Tasa de interés (%)</label>
         {{ form.tasa_interes }}
       </div>
+
       <div class="form-group">
         <label for="{{ form.fecha_inicio.id_for_label }}">Fecha de inicio</label>
         {{ form.fecha_inicio }}
       </div>
+
       <div class="form-group">
         <label for="{{ form.cuotas_totales.id_for_label }}">Cuotas totales</label>
         {{ form.cuotas_totales }}
       </div>
     </div>
 
+    <!-- Fila 4: monedas -->
     <div class="form-row">
       <div class="form-group">
         <label for="{{ form.moneda_prestamo.id_for_label }}">Moneda del préstamo</label>
         {{ form.moneda_prestamo }}
       </div>
+
       <div class="form-group">
         <label for="{{ form.moneda_pago.id_for_label }}">Moneda de pago/visualización</label>
         {{ form.moneda_pago }}

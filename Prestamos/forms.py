@@ -10,17 +10,10 @@ class PrestamoForm(forms.ModelForm):
     class Meta:
         model = Prestamo
         fields = [
-            'acreedor',
-            'banco',
-            'descripcion',
-            'monto_total',
-            'tasa_interes',
-            'fecha_inicio',
-            'cuotas_totales',
-            'moneda_prestamo',
-            'moneda_pago',
+            'acreedor', 'banco', 'descripcion', 'monto_total', 'tasa_interes',
+            'fecha_inicio', 'cuotas_totales', 'moneda_prestamo', 'moneda_pago'
         ]
-    labels = {
+        labels = {
             'acreedor': 'Acreedor / Entidad',
             'banco': 'Banco / etiqueta corta',
             'descripcion': 'Descripción',
@@ -31,33 +24,45 @@ class PrestamoForm(forms.ModelForm):
             'moneda_prestamo': 'Moneda del préstamo',
             'moneda_pago': 'Moneda de pago/visualización',
         }
-    widgets = {
-            'banco': forms.TextInput(
-                attrs={'class': 'input', 'placeholder': 'BCP, Interbank…'}
-            ),
-            'descripcion': forms.Textarea(
-                attrs={
-                    'class': 'textarea',
-                    'rows': 2,
-                    'placeholder': 'Ej. Préstamo para carrito',
-                }
-            ),
-            'monto_total': forms.NumberInput(
-                attrs={'min': '0.01', 'max': '400000', 'step': '0.01'}
-            ),
-            'tasa_interes': forms.NumberInput(
-                attrs={'min': '0', 'max': '116', 'step': '0.01'}
-            ),
-            'fecha_inicio': DateInput(),
-            'cuotas_totales': forms.NumberInput(
-                attrs={'min': '1', 'max': '36', 'step': '1'}
-            ),
-            'moneda_prestamo': forms.Select(attrs={'class': 'input'}, choices=MONEDAS),
-            'moneda_pago': forms.Select(attrs={'class': 'input'}, choices=MONEDAS),
+        widgets = {
+            'acreedor': forms.Select(attrs={'class': 'input'}),
+            'banco': forms.TextInput(attrs={
+                'class': 'input',
+                'placeholder': 'BCP tarjeta crédito, Papá, Nevado…'
+            }),
+            'descripcion': forms.Textarea(attrs={
+                'class': 'input',
+                'rows': 3,
+                'placeholder': 'Ej. Préstamo para carrito'
+            }),
+            'monto_total': forms.NumberInput(attrs={
+                'class': 'input',
+                'min': '0.01', 'max': '400000', 'step': '0.01'
+            }),
+            'tasa_interes': forms.NumberInput(attrs={
+                'class': 'input',
+                'min': '0', 'max': '116', 'step': '0.01'
+            }),
+            'fecha_inicio': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'input'
+            }),
+            'cuotas_totales': forms.NumberInput(attrs={
+                'class': 'input',
+                'min': '1', 'max': '36', 'step': '1'
+            }),
+            'moneda_prestamo': forms.Select(attrs={'class': 'input'}),
+            'moneda_pago': forms.Select(attrs={'class': 'input'}),
         }
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        qs = Acreedor.objects.none()
+        if user is not None and getattr(user, 'is_authenticated', False):
+            qs = Acreedor.objects.filter(owner=user).order_by('nombre')
+
+        self.fields['acreedor'].queryset = qs
+        self.fields['acreedor'].empty_label = '--------'
 
     def clean(self):
         cleaned = super().clean()
@@ -99,31 +104,39 @@ class AcreedorForm(forms.ModelForm):
             'email': 'Correo',
         }
         widgets = {
-            'nombre': forms.TextInput(attrs={'maxlength': '150'}),
-            'documento': forms.TextInput(attrs={
-                'maxlength': '11',
-                'inputmode': 'numeric',
-                'pattern': r'\d{8,11}',
-                'placeholder': 'DNI (8) o RUC (11)',
+            'nombre': forms.TextInput(attrs={
+                'class': 'input',
+                'placeholder': 'Papá, BCP, Claro, etc.'
             }),
-            'banco': forms.TextInput(attrs={'maxlength': '100'}),
+            'tipo': forms.Select(attrs={'class': 'input'}),
+            'documento': forms.TextInput(attrs={
+                'class': 'input',
+                'placeholder': 'DNI (8) o RUC (11)'
+            }),
+            'banco': forms.TextInput(attrs={
+                'class': 'input',
+                'placeholder': 'BCP, Interbank, BBVA…'
+            }),
             'nro_cuenta': forms.TextInput(attrs={
-                'maxlength': '40',
-                'inputmode': 'numeric',
-                'pattern': r'[0-9\- ]{10,30}',
+                'class': 'input',
+                'placeholder': 'N° de cuenta'
             }),
             'nro_cci': forms.TextInput(attrs={
-                'maxlength': '40',
-                'inputmode': 'numeric',
-                'pattern': r'\d{20}',
+                'class': 'input',
+                'placeholder': 'N° CCI'
             }),
-            'alias_yape': forms.TextInput(attrs={'maxlength': '50'}),
+            'alias_yape': forms.TextInput(attrs={
+                'class': 'input',
+                'placeholder': 'Alias en Yape / Plin'
+            }),
             'celular': forms.TextInput(attrs={
-                'maxlength': '9',
-                'inputmode': 'numeric',
-                'pattern': r'\d{9}',
+                'class': 'input',
+                'placeholder': '904XXXXXX'
             }),
-            'email': forms.EmailInput(),
+            'email': forms.EmailInput(attrs={
+                'class': 'input',
+                'placeholder': 'ejemplo@correo.com'
+            }),
         }
 
     def __init__(self, *args, user=None, **kwargs):

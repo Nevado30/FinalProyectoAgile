@@ -130,7 +130,7 @@ VONAGE_SMS_ENABLED = os.getenv('VONAGE_SMS_ENABLED', 'True') == 'True'
 VONAGE_API_KEY     = os.getenv('VONAGE_API_KEY')
 VONAGE_API_SECRET  = os.getenv('VONAGE_API_SECRET')
 VONAGE_FROM_NUMBER = os.getenv('VONAGE_FROM_NUMBER', 'GestorPagos')
-
+SMS_ENABLED = VONAGE_SMS_ENABLED
 # ============================
 #  Mercado Pago (Checkout Pro)
 # ============================

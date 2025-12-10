@@ -199,3 +199,45 @@ def crear_acreedor(request):
         'form': form,
         'titulo': 'Nuevo acreedor',
     })
+
+@login_required
+def editar_acreedor(request, acreedor_id: int):
+    acreedor = get_object_or_404(Acreedor, pk=acreedor_id, owner=request.user)
+
+    if request.method == 'POST':
+        form = AcreedorForm(request.POST, instance=acreedor, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Acreedor actualizado correctamente.')
+            return redirect('prestamos:acreedores_lista')
+        messages.error(request, 'Revisa los campos del formulario.')
+    else:
+        form = AcreedorForm(instance=acreedor, user=request.user)
+
+    return render(request, 'prestamos/acreedor_form.html', {
+        'form': form,
+        'titulo': 'Editar acreedor',
+    })
+
+
+@login_required
+def eliminar_acreedor(request, acreedor_id: int):
+    acreedor = get_object_or_404(Acreedor, pk=acreedor_id, owner=request.user)
+    tiene_prestamos = acreedor.prestamos.exists()
+
+    if request.method == 'POST':
+        if tiene_prestamos:
+            messages.error(
+                request,
+                'No puedes eliminar un acreedor que ya tiene préstamos asociados.'
+            )
+            return redirect('prestamos:acreedores_lista')
+
+        acreedor.delete()
+        messages.success(request, 'Acreedor eliminado correctamente.')
+        return redirect('prestamos:acreedores_lista')
+
+    return render(request, 'prestamos/acreedor_confirmar_eliminar.html', {
+        'acreedor': acreedor,
+        'tiene_prestamos': tiene_prestamos,
+    })

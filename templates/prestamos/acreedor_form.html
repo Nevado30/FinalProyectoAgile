@@ -1,69 +1,94 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}{{ titulo }}{% endblock %}
 
 {% block content %}
 <div class="container">
+
   <h1 class="page-title">{{ titulo }}</h1>
 
   <form method="post" class="form-card">
     {% csrf_token %}
 
+    <!-- Fila 1: nombre + tipo -->
     <div class="form-row">
       <div class="form-group">
         <label for="{{ form.nombre.id_for_label }}">Nombre / Razón social</label>
         {{ form.nombre }}
+        <div class="help">
+          Persona, negocio o empresa a la que le vas a pagar (ej: “Papá”, “BCP”, “Claro Perú”).
+        </div>
       </div>
+
       <div class="form-group">
         <label for="{{ form.tipo.id_for_label }}">Tipo de acreedor</label>
         {{ form.tipo }}
       </div>
     </div>
 
+    <!-- Fila 2: documento + celular -->
     <div class="form-row">
       <div class="form-group">
         <label for="{{ form.documento.id_for_label }}">DNI / RUC</label>
         {{ form.documento }}
+        <div class="help">DNI (8 dígitos) o RUC (11 dígitos). Solo números.</div>
       </div>
+
       <div class="form-group">
         <label for="{{ form.celular.id_for_label }}">Celular</label>
         {{ form.celular }}
+        <div class="help">Lo usarás para Yape / Plin o para enviarle un SMS si lo necesitas.</div>
       </div>
     </div>
 
+    <!-- Fila 3: banco + N° cuenta -->
     <div class="form-row">
       <div class="form-group">
         <label for="{{ form.banco.id_for_label }}">Banco</label>
         {{ form.banco }}
+        <div class="help">Ej: “BCP”, “Interbank”, “Scotiabank”.</div>
       </div>
+
       <div class="form-group">
         <label for="{{ form.nro_cuenta.id_for_label }}">N° de cuenta</label>
         {{ form.nro_cuenta }}
-      </div>
-      <div class="form-group">
-        <label for="{{ form.nro_cci.id_for_label }}">N° CCI</label>
-        {{ form.nro_cci }}
+        <div class="help">Cuenta donde normalmente le depositas (10 a 30 caracteres).</div>
       </div>
     </div>
 
+    <!-- Fila 4: CCI + correo -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="{{ form.nro_cci.id_for_label }}">N° CCI</label>
+        {{ form.nro_cci }}
+        <div class="help">Si tienes el CCI, guárdalo aquí. Es opcional.</div>
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.email.id_for_label }}">Correo</label>
+        {{ form.email }}
+        <div class="help">Opcional. Solo por si quieres tenerlo registrado.</div>
+      </div>
+    </div>
+
+    <!-- Fila 5: alias Yape / Plin -->
     <div class="form-row">
       <div class="form-group">
         <label for="{{ form.alias_yape.id_for_label }}">Alias Yape / Plin</label>
         {{ form.alias_yape }}
+        <div class="help">
+          Nombre como lo tienes guardado en Yape / Plin. Solo para tu referencia visual.
+        </div>
       </div>
+
       <div class="form-group">
-        <label for="{{ form.email.id_for_label }}">Correo</label>
-        {{ form.email }}
       </div>
     </div>
 
     <div class="form-actions">
-      <a href="{% url 'prestamos:acreedores_lista' %}" class="btn btn-secondary">
-        Cancelar
-      </a>
-      <button type="submit" class="btn btn-primary">
-        Guardar
-      </button>
+      <a href="{% url 'prestamos:acreedores_lista' %}" class="btn btn-secondary">Cancelar</a>
+      <button type="submit" class="btn btn-primary">Guardar</button>
     </div>
   </form>
 </div>

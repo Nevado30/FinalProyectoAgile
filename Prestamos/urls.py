@@ -11,4 +11,6 @@ urlpatterns = [
     path('<int:prestamo_id>/eliminar/', views.eliminar_prestamo, name='eliminar'),
     path('acreedores/', views.lista_acreedores, name='acreedores_lista'),
     path('acreedores/nuevo/', views.crear_acreedor, name='acreedor_nuevo'),
+    path('acreedores/<int:acreedor_id>/editar/', views.editar_acreedor, name='acreedor_editar'),
+    path('acreedores/<int:acreedor_id>/eliminar/', views.eliminar_acreedor, name='acreedor_eliminar'),
 ]

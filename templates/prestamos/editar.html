@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Editar préstamo{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -23,19 +26,19 @@
         <label for="{{ form.acreedor.id_for_label }}">Acreedor / Entidad</label>
         {{ form.acreedor }}
         <div class="help">
-          <a href="{% url 'prestamos:acreedor_nuevo' %}" target="_blank">
-            Crear nuevo acreedor
-          </a>
+          Si necesitas un nuevo acreedor, créalo primero en 
+          <a href="{% url 'prestamos:acreedores_lista' %}">Mis acreedores</a>.
         </div>
       </div>
       <div class="form-group">
         <label for="{{ form.banco.id_for_label }}">Banco / etiqueta corta</label>
         {{ form.banco }}
       </div>
-      <div class="form-group">
-        <label for="{{ form.monto_total.id_for_label }}">Monto total</label>
-        {{ form.monto_total }}
-      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="{{ form.monto_total.id_for_label }}">Monto total</label>
+      {{ form.monto_total }}
     </div>
 
     <div class="form-group">

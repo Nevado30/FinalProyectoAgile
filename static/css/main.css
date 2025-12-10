@@ -256,3 +256,52 @@ tr:hover td{ background:#0c142c; }
 @media (max-width: 900px){
   .kpi-row{ grid-template-columns: 1fr; }
 }
+
+/* Inputs bonitos para formularios en tema oscuro */
+
+.form-card input,
+.form-card select,
+.form-card textarea {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border-radius: 0.6rem;
+    border: 1px solid rgba(148, 163, 184, 0.35); /* gris azulado */
+    background: rgba(15, 23, 42, 0.9);           /* fondo oscuro */
+    color: #e5e7eb;
+    font-size: 0.95rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+/* Placeholders suaves */
+.form-card input::placeholder,
+.form-card textarea::placeholder {
+    color: #6b7280;
+}
+
+/* Estado focus (cuando el usuario está escribiendo) */
+.form-card input:focus,
+.form-card select:focus,
+.form-card textarea:focus {
+    outline: none;
+    border-color: #6366f1; /* morado tipo "primary" */
+    box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.45);
+    background: rgba(15, 23, 42, 1);
+}
+
+/* Date input: mantener el icono de calendario y que se vea bien en oscuro */
+.form-card input[type="date"] {
+    color-scheme: dark; /* pide al navegador usar picker oscuro si puede */
+}
+
+/* Que el icono se vea claro */
+.form-card input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
+/* Selects: quitar el blanco raro cuando se despliegan */
+.form-card select {
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}

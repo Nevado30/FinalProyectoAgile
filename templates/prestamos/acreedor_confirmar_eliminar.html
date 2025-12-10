@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Eliminar acreedor{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="page-title">Eliminar acreedor</h1>
+
+  <div class="card">
+    <p>
+      Vas a eliminar al acreedor <strong>{{ acreedor.nombre }}</strong>.
+    </p>
+
+    {% if tiene_prestamos %}
+      <div class="alert alert-warning">
+        Este acreedor tiene préstamos asociados, por eso <strong>no se puede eliminar</strong>.
+        Debes reasignar o eliminar esos préstamos primero.
+      </div>
+      <div class="form-actions">
+        <a href="{% url 'prestamos:acreedores_lista' %}" class="btn btn-secondary">Volver</a>
+      </div>
+    {% else %}
+      <p>Esta acción no se puede deshacer.</p>
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-actions">
+          <a href="{% url 'prestamos:acreedores_lista' %}" class="btn btn-secondary">Cancelar</a>
+          <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+        </div>
+      </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
