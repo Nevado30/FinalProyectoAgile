@@ -23,6 +23,17 @@ class Pago(models.Model):
     monto_base_fijo = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     monto_destino_fijo = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     # ------------------------------------------------------------------------
-
+    mp_preference_id = models.CharField(
+            max_length=100,
+            blank=True,
+            null=True,
+            help_text="ID de preferencia de Mercado Pago (Checkout Pro)."
+        )
+    mp_payment_id = models.CharField(
+            max_length=100,
+            blank=True,
+            null=True,
+            help_text="ID de pago de Mercado Pago una vez aprobado."
+        )
     def __str__(self):
         return f"Cuota {self.numero_cuota} - {self.prestamo.banco} ({self.estado})"

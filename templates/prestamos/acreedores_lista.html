@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Mis acreedores{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="page-title">Mis acreedores</h1>
+
+  <div class="toolbar">
+    <a href="{% url 'prestamos:acreedor_nuevo' %}" class="btn btn-primary">
+      Nuevo acreedor
+    </a>
+    <a href="{% url 'prestamos:lista' %}" class="btn btn-secondary">
+      Volver a préstamos
+    </a>
+  </div>
+
+  <div class="card table-card">
+    <table class="table table-zebra centered">
+      <thead>
+        <tr>
+          <th class="left">Nombre</th>
+          <th>Tipo</th>
+          <th>Banco</th>
+          <th>N° cuenta</th>
+          <th>Celular</th>
+          <th>Correo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in acreedores %}
+          <tr>
+            <td class="left">{{ a.nombre }}</td>
+            <td>{{ a.get_tipo_display }}</td>
+            <td>{{ a.banco|default:"—" }}</td>
+            <td>{{ a.nro_cuenta|default:"—" }}</td>
+            <td>{{ a.celular|default:"—" }}</td>
+            <td>{{ a.email|default:"—" }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6">
+              <div class="empty">
+                <div class="empty-title">Aún no registras acreedores.</div>
+                <div class="empty-desc">
+                  Usa el botón “Nuevo acreedor” para registrar a bancos, amigos, empresas, etc.
+                </div>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

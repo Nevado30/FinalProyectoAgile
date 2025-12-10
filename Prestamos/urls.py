@@ -9,4 +9,6 @@ urlpatterns = [
     path('nuevo/', views.crear_prestamo, name='crear'),
     path('<int:prestamo_id>/editar/', views.editar_prestamo, name='editar'),
     path('<int:prestamo_id>/eliminar/', views.eliminar_prestamo, name='eliminar'),
+    path('acreedores/', views.lista_acreedores, name='acreedores_lista'),
+    path('acreedores/nuevo/', views.crear_acreedor, name='acreedor_nuevo'),
 ]

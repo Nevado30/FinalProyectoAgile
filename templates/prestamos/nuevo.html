@@ -9,7 +9,17 @@
 
     <div class="form-row">
       <div class="form-group">
-        <label for="{{ form.banco.id_for_label }}">Entidad</label>
+        <label for="{{ form.acreedor.id_for_label }}">Acreedor / Entidad</label>
+        {{ form.acreedor }}
+        <div class="help">
+          Escoge a quién le debes.
+          <a href="{% url 'prestamos:acreedor_nuevo' %}" target="_blank">
+            Crear nuevo acreedor
+          </a>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="{{ form.banco.id_for_label }}">Banco / etiqueta corta</label>
         {{ form.banco }}
       </div>
       <div class="form-group">

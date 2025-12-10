@@ -13,60 +13,71 @@
 
   <div class="card table-card">
     <table class="table table-zebra centered">
-  <thead>
-    <tr>
-      <th class="left">Persona</th>
-      <th class="left">Entidad</th>
-      <th>Cuota</th>
-      <th>Vence</th>
-      <th class="right">Monto</th>
-      <th class="right">Equivalente</th>
-      <th>Estado</th>
-      <th>Acción</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for f in filas %}
-      <tr>
-        <td class="left">{{ f.pago.prestamo.persona.apellidos }}, {{ f.pago.prestamo.persona.nombres }}</td>
-        <td class="left">{{ f.pago.prestamo.banco }}</td>
-        <td>{{ f.pago.numero_cuota }}</td>
-        <td>{{ f.pago.fecha_vencimiento|date:"d/m/Y" }}</td>
-        <td class="right">{{ f.sym_origen }}{{ f.monto_base|floatformat:2|localize }}</td>
-        <td class="right">
-          {% if f.equiv is not None %}
-            {{ f.sym_destino }}{{ f.equiv|floatformat:2|localize }}
-          {% else %}—{% endif %}
-        </td>
-        <td>
-          {% if f.pago.estado == 'Pagado' %}
-            <span class="badge success">Pagado</span>
-          {% else %}
-            <span class="badge">Pendiente</span>
-          {% endif %}
-        </td>
-        <td>
-          {% if f.pago.estado != 'Pagado' %}
-            <form method="post" action="{% url 'pagos:marcar_pagado' f.pago.id_pago %}">
-              {% csrf_token %}
-              <button class="btn btn-primary" type="submit">Marcar pagado</button>
-            </form>
-          {% else %}—{% endif %}
-        </td>
-      </tr>
-    {% empty %}
-      <tr>
-        <td colspan="8">
-          <div class="empty">
-            <div class="empty-title">No hay pagos registrados.</div>
-            <div class="empty-desc">Crea un préstamo o cambia de vista.</div>
-          </div>
-        </td>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
+      <thead>
+        <tr>
+          <th class="left">Persona</th>
+          <th class="left">Entidad</th>
+          <th>Cuota</th>
+          <th>Vence</th>
+          <th class="right">Monto</th>
+          <th class="right">Equivalente</th>
+          <th>Estado</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in filas %}
+          {% with p=f.pago %}
+          <tr>
+            <td class="left">{{ p.prestamo.persona.apellidos }}, {{ p.prestamo.persona.nombres }}</td>
+            <td class="left">{{ p.prestamo.banco }}</td>
+            <td>{{ p.numero_cuota }}</td>
+            <td>{{ p.fecha_vencimiento|date:"d/m/Y" }}</td>
 
+            <td class="right">
+              {{ f.sym_origen }}{{ f.monto_base|floatformat:2|localize }}
+            </td>
+
+            <td class="right">
+              {% if f.equiv is not None %}
+                {{ f.sym_destino }}{{ f.equiv|floatformat:2|localize }}
+              {% else %}—{% endif %}
+            </td>
+
+            <td>
+              {% if p.estado == 'Pagado' %}
+                <span class="badge success">Pagado</span>
+              {% elif p.estado == 'Vencido' %}
+                <span class="badge danger">Vencido</span>
+              {% else %}
+                <span class="badge">Pendiente</span>
+              {% endif %}
+            </td>
+
+            <td>
+              {% if p.estado == 'Pendiente' %}
+                <a href="{% url 'pagos:pagar_cuota' p.id_pago %}"
+                   class="btn btn-primary">
+                  Pagar ahora
+                </a>
+              {% else %}
+                —
+              {% endif %}
+            </td>
+          </tr>
+          {% endwith %}
+        {% empty %}
+          <tr>
+            <td colspan="8">
+              <div class="empty">
+                <div class="empty-title">No hay pagos registrados.</div>
+                <div class="empty-desc">Crea un préstamo o cambia de vista.</div>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 
   {% if page_obj and page_obj.paginator.num_pages > 1 %}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="page-title">{{ titulo }}</h1>
+
+  <form method="post" class="form-card">
+    {% csrf_token %}
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="{{ form.nombre.id_for_label }}">Nombre / Razón social</label>
+        {{ form.nombre }}
+      </div>
+      <div class="form-group">
+        <label for="{{ form.tipo.id_for_label }}">Tipo de acreedor</label>
+        {{ form.tipo }}
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="{{ form.documento.id_for_label }}">DNI / RUC</label>
+        {{ form.documento }}
+      </div>
+      <div class="form-group">
+        <label for="{{ form.celular.id_for_label }}">Celular</label>
+        {{ form.celular }}
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="{{ form.banco.id_for_label }}">Banco</label>
+        {{ form.banco }}
+      </div>
+      <div class="form-group">
+        <label for="{{ form.nro_cuenta.id_for_label }}">N° de cuenta</label>
+        {{ form.nro_cuenta }}
+      </div>
+      <div class="form-group">
+        <label for="{{ form.nro_cci.id_for_label }}">N° CCI</label>
+        {{ form.nro_cci }}
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="{{ form.alias_yape.id_for_label }}">Alias Yape / Plin</label>
+        {{ form.alias_yape }}
+      </div>
+      <div class="form-group">
+        <label for="{{ form.email.id_for_label }}">Correo</label>
+        {{ form.email }}
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <a href="{% url 'prestamos:acreedores_lista' %}" class="btn btn-secondary">
+        Cancelar
+      </a>
+      <button type="submit" class="btn btn-primary">
+        Guardar
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -2,12 +2,14 @@
 {% block title %}Personas{% endblock %}
 {% block header %}
   <div class="page-header page-header--with-actions">
-  <h1 class="page-title">Personas registradas</h1>
-  <div class="actions">
-    <a class="btn btn-secondary" href="{% url 'seguridad:profile' %}">Perfil</a>
-    <a class="btn btn-primary" href="{% url 'seguridad:notificaciones' %}">Config. de notificaciones</a>
+    <h1 class="page-title">Personas registradas</h1>
+    <div class="actions">
+      <a class="btn btn-secondary" href="{% url 'seguridad:profile' %}">Perfil</a>
+      <a class="btn btn-primary" href="{% url 'seguridad:notificaciones' %}">
+        Config. de notificaciones
+      </a>
+    </div>
   </div>
-</div>
 {% endblock %}
 {% block content %}
   <div class="card">
@@ -22,18 +24,21 @@
           </tr>
         </thead>
         <tbody>
-        {% for p in personas %}
-          <tr>
-            <td>{{ p.apellidos }}, {{ p.nombres }}</td>
-            <td>{{ p.correo }}</td>
-            <td>{{ p.telefono|default:"—" }}</td>
-            <td>
-              <a class="btn btn-ghost" href="{% url 'persona:prestamos' p.id_persona %}">Ver préstamos →</a>
-            </td>
-          </tr>
-        {% empty %}
-          <tr><td colspan="4">No hay personas registradas.</td></tr>
-        {% endfor %}
+          {% for p in personas %}
+            <tr>
+              <td>{{ p.apellidos }}, {{ p.nombres }}</td>
+              <td>{{ p.correo }}</td>
+              <td>{{ p.telefono|default:"—" }}</td>
+              <td>
+                <a class="btn btn-ghost"
+                   href="{% url 'persona:prestamos' p.id_persona %}">
+                  Ver préstamos →
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4">No hay personas registradas.</td></tr>
+          {% endfor %}
         </tbody>
       </table>
     </div>

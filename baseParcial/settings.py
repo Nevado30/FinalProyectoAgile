@@ -7,7 +7,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-reemplaza-esto-en-produccion')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
-ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -123,3 +122,17 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 LOGIN_URL = '/seguridad/login/'
 LOGIN_REDIRECT_URL = '/reportes/'
 LOGOUT_REDIRECT_URL = '/seguridad/login/'
+
+# ==========================
+# Configuración de SMS (Vonage)
+# ==========================
+VONAGE_SMS_ENABLED = os.getenv('VONAGE_SMS_ENABLED', 'True') == 'True'
+VONAGE_API_KEY     = os.getenv('VONAGE_API_KEY')
+VONAGE_API_SECRET  = os.getenv('VONAGE_API_SECRET')
+VONAGE_FROM_NUMBER = os.getenv('VONAGE_FROM_NUMBER', 'GestorPagos')
+
+# ============================
+#  Mercado Pago (Checkout Pro)
+# ============================
+MP_PUBLIC_KEY = os.getenv('MP_PUBLIC_KEY')
+MP_ACCESS_TOKEN = os.getenv('MP_ACCESS_TOKEN')
